@@ -524,11 +524,11 @@ com.smartcanteen.common/
 
 | 配置项 | 归属服务 | 存储位置 | 默认值 | 说明 |
 |--------|---------|---------|--------|------|
-| `pay_timeout_minutes` | order-service | order_db.config | 10 | 待支付超时（分钟） |
-| `accept_timeout_minutes` | order-service | order_db.config | 10 | 接单超时（分钟） |
-| `cancel_window_minutes` | order-service | order_db.config | 1 | 接单后可取消窗口（分钟） |
-| `pickup_number_reset_rule` | pickup-service | pickup_db.config | NONE | 取餐号重置规则 |
-| `stock_alert_scan_interval` | menu-service | menu_db.config | 300 | 库存预警扫描间隔（秒） |
+| `pay_timeout_minutes` | order-service | canteen_order.config | 10 | 待支付超时（分钟） |
+| `accept_timeout_minutes` | order-service | canteen_order.config | 10 | 接单超时（分钟） |
+| `cancel_window_minutes` | order-service | canteen_order.config | 1 | 接单后可取消窗口（分钟） |
+| `pickup_number_reset_rule` | pickup-service | canteen_pickup.config | NONE | 取餐号重置规则 |
+| `stock_alert_scan_interval` | menu-service | canteen_menu.config | 300 | 库存预警扫描间隔（秒） |
 
 每个服务在自己的数据库中建 `config` 表：
 
@@ -1659,7 +1659,7 @@ sequenceDiagram
     participant G as Gateway
     participant U as UserService
     participant R as Redis
-    participant DB as user_db
+    participant DB as canteen_user
 
     C->>G: POST /api/user/login/password
     G->>U: 转发（公开接口）
@@ -1742,8 +1742,8 @@ sequenceDiagram
     participant O as OrderService (TM)
     participant M as MenuService (RM)
     participant S as Seata Server
-    participant DB_O as order_db
-    participant DB_M as menu_db
+    participant DB_O as canteen_order
+    participant DB_M as canteen_menu
     participant MQ as RocketMQ
 
     U->>G: POST /api/order/create
@@ -3649,7 +3649,7 @@ export default {
 
 以下为各数据库所有表的字段汇总，含注释说明。
 
-#### 10.3.1 user_db
+#### 10.3.1 canteen_user
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
@@ -3657,7 +3657,7 @@ export default {
 | `login_log` | 登录日志 | id, user_id, login_type, ip, user_agent, status, fail_reason, create_time |
 | `refresh_token` | 刷新Token | id, user_id, token_jti(UNIQUE), status, expire_time, create_time |
 
-#### 10.3.2 menu_db
+#### 10.3.2 canteen_menu
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
@@ -3669,7 +3669,7 @@ export default {
 | `daily_menu_item` | 菜单菜品项 | id, daily_menu_id, dish_id, total_stock, remaining_stock, reserved_stock, alert_threshold, is_listed, price_override, create_time |
 | `inventory_log` | 库存变更日志 | id, daily_menu_item_id, change_type, change_amount, before_remaining, after_remaining, order_id, create_time |
 
-#### 10.3.3 order_db
+#### 10.3.3 canteen_order
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
@@ -3677,13 +3677,13 @@ export default {
 | `order_item` | 订单明细 | id, order_id, dish_id, dish_name, dish_image, unit_price, quantity, subtotal |
 | `order_status_log` | 状态变更日志 | id, order_id, from_status, to_status, operator_id, operator_role, remark, create_time |
 
-#### 10.3.4 pickup_db
+#### 10.3.4 canteen_pickup
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
 | `pickup_number_sequence` | 取餐号全局序列 | id(固定1), current_letter, current_number, reset_rule, last_reset_time |
 | `pickup_qrcode` | 取餐二维码 | id, order_id(UNIQUE), qrcode_content, pickup_code(UNIQUE), is_verified, verify_time, create_time |
-**各服务 config 表（每服务独立，不跨库访问，同结构）：** order_db.config（订单超时等）、menu_db.config（库存预警间隔等）、pickup_db.config（取餐号重置规则等）。字段：id, config_key(UNIQUE), config_value, config_type, description, update_time, updated_by |
+**各服务 config 表（每服务独立，不跨库访问，同结构）：** canteen_order.config（订单超时等）、canteen_menu.config（库存预警间隔等）、canteen_pickup.config（取餐号重置规则等）。字段：id, config_key(UNIQUE), config_value, config_type, description, update_time, updated_by |
 | `preparing_queue_item` | 制作中队列 | id, stall_id, order_id(UNIQUE), pickup_no, enter_time, position |
 | `waiting_queue_item` | 待取餐队列 | id, stall_id, order_id(UNIQUE), pickup_no, enter_time, position |
 | `call_event` | 叫号事件 | id, stall_id, order_id, pickup_no, call_type, call_time |

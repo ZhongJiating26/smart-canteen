@@ -232,10 +232,10 @@ graph TD
 | 服务名称 | 服务标识 | 端口 | 独立数据库 | 主要职责 |
 |---------|---------|------|-----------|---------|
 | 网关服务 | gateway-service | 9000 | - | 路由转发、JWT 校验、IP/用户级限流、WebSocket 代理 |
-| 用户服务 | user-service | 9001 | user_db | 注册登录、JWT 签发/刷新、用户信息维护、支付密码验证 |
-| 菜品菜单服务 | menu-service | 9002 | menu_db | 菜品 CRUD、每日菜单发布、库存预占/恢复、上下架、库存预警 |
-| 订单服务 | order-service | 9003 | order_db | 下单、支付验证、状态流转（6 状态）、超时取消（RocketMQ） |
-| 取餐排队服务 | pickup-service | 9004 | pickup_db | 取餐号全局序列、制作中队列、待取餐队列、叫号（自动+手动）、核销、WebSocket 消息生产 |
+| 用户服务 | user-service | 9001 | canteen_user | 注册登录、JWT 签发/刷新、用户信息维护、支付密码验证 |
+| 菜品菜单服务 | menu-service | 9002 | canteen_menu | 菜品 CRUD、每日菜单发布、库存预占/恢复、上下架、库存预警 |
+| 订单服务 | order-service | 9003 | canteen_order | 下单、支付验证、状态流转（6 状态）、超时取消（RocketMQ） |
+| 取餐排队服务 | pickup-service | 9004 | canteen_pickup | 取餐号全局序列、制作中队列、待取餐队列、叫号（自动+手动）、核销、WebSocket 消息生产 |
 
 ### 4.3 服务依赖关系
 
@@ -389,10 +389,10 @@ Producer 在创建订单和支付成功时分别发送延迟消息；Consumer �
 
 | 数据域 | 归属服务 | 数据库 | 核心数据对象 |
 |--------|---------|--------|-------------|
-| 用户数据域 | user-service | user_db | 用户、角色、支付密码、登录日志 |
-| 菜品菜单数据域 | menu-service | menu_db | 窗口/档口、菜品、分类、每日菜单、库存 |
-| 订单数据域 | order-service | order_db | 订单主表、订单明细、状态变更时间线 |
-| 取餐排队数据域 | pickup-service | pickup_db | 取餐号全局序列、制作中队列、待取餐队列、叫号事件、核销记录 |
+| 用户数据域 | user-service | canteen_user | 用户、角色、支付密码、登录日志 |
+| 菜品菜单数据域 | menu-service | canteen_menu | 窗口/档口、菜品、分类、每日菜单、库存 |
+| 订单数据域 | order-service | canteen_order | 订单主表、订单明细、状态变更时间线 |
+| 取餐排队数据域 | pickup-service | canteen_pickup | 取餐号全局序列、制作中队列、待取餐队列、叫号事件、核销记录 |
 | 日志配置数据域 | 各服务分散 | 各数据库 | 操作日志、异常日志、系统配置 |
 
 ### 6.2 数据库分布策略
@@ -407,8 +407,8 @@ Producer 在创建订单和支付成功时分别发送延迟消息；Consumer �
 |---------|---------|-----------|
 | 验证码 | user-service | 无（过期自动失效） |
 | Token 黑名单 | user-service | 无（过期自动失效） |
-| 制作中队列快照 | pickup-service | MySQL pickup_db |
-| 待取餐队列快照 | pickup-service | MySQL pickup_db |
+| 制作中队列快照 | pickup-service | MySQL canteen_pickup |
+| 待取餐队列快照 | pickup-service | MySQL canteen_pickup |
 | 业务配置 | 各服务 | Nacos / MySQL |
 | 限流计数 | gateway | 无 |
 

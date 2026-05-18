@@ -1,0 +1,1 @@
+-- Seata undo_log DDL for transactional service databases.
