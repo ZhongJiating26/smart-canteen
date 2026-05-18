@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: user-service
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      discovery:
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:SMART_CANTEEN}
+      config:
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:SMART_CANTEEN}
+        file-extension: yaml
+        import-check:
+          enabled: false
