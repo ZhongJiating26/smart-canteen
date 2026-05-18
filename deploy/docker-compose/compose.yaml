@@ -1,0 +1,87 @@
+services:
+  mysql:
+    image: mysql:8.0.44
+    container_name: canteen-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      TZ: Asia/Shanghai
+    ports:
+      - "3106:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2
+    container_name: canteen-redis
+    ports:
+      - "6179:6379"
+    command: redis-server --appendonly yes --requirepass root123456
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: canteen-nacos
+    environment:
+      MODE: standalone
+      TZ: Asia/Shanghai
+    ports:
+      - "8148:8848"
+      - "9148:9848"
+    restart: unless-stopped
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.2.0
+    container_name: canteen-rocketmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9176:9876"
+    restart: unless-stopped
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.2.0
+    container_name: canteen-rocketmq-broker
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: sh mqbroker -n rocketmq-namesrv:9876 --enable-proxy
+    ports:
+      - "11911:10911"
+      - "11909:10909"
+      - "8181:8081"
+    restart: unless-stopped
+
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    container_name: canteen-rocketmq-dashboard
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=rocketmq-namesrv:9876"
+    ports:
+      - "8188:8082"
+    restart: unless-stopped
+
+  seata:
+    image: seataio/seata-server:1.7.1
+    container_name: canteen-seata
+    environment:
+      SEATA_IP: seata
+      SEATA_PORT: 8091
+      STORE_MODE: file
+      TZ: Asia/Shanghai
+    ports:
+      - "8191:8091"
+      - "7191:7091"
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:

@@ -36,7 +36,7 @@
 
 ### 2.1 系统架构概述
 
-系统采用 6 层架构：客户端层、接入层、网关层、服务层、基础能力层、外部系统层。客户端通过接入层到达网关，网关作为后端统一入口进行鉴权和路由，4 个业务微服务构成服务层，各服务拥有独立数据库。基础能力层提供注册配置、持久化、缓存、消息和分布式事务支撑。Nacos、Redis、RocketMQ、Seata Server 等基础支撑组件部署在 K3S 集群内，便于统一编排和服务治理；MySQL 作为核心业务数据持久化组件，部署在 K3S 集群外部。
+系统采用 6 层架构：客户端层、接入层、网关层、服务层、基础能力层、外部系统层。客户端通过接入层到达网关，网关作为后端统一入口进行鉴权和路由，4 个业务微服务构成服务层，各服务拥有独立数据库。基础能力层提供注册配置、持久化、缓存、消息和分布式事务支撑。MySQL、Nacos、Redis、RocketMQ、Seata Server 等基础支撑组件统一容器化部署，开发阶段通过 Docker Compose 编排，正式部署阶段可在 K3S 集群内通过 Deployment/StatefulSet 与持久化卷管理。
 
 ### 2.2 总体架构图
 
@@ -214,7 +214,7 @@ graph TD
 | Redis | 7.x | 验证码、Token 黑名单、限流计数、队列缓存 | K3S 集群内 |
 | RocketMQ | 5.x | 订单超时延迟消息 | K3S 集群内 |
 | Seata | 1.x | 分布式事务（AT 模式） | K3S 集群内 |
-| MySQL | 8.x | 业务数据持久化 | K3S 集群外 |
+| MySQL | 8.x | 业务数据持久化 | Docker Compose / K3S StatefulSet + PVC |
 
 ---
 
@@ -474,7 +474,7 @@ graph TD
 | Order Service | 9003 | K3S Deployment + Service | 1 |
 | Pickup Service | 9004 | K3S Deployment + Service | 1 |
 | Nacos | 8848 | K3S Deployment + Service | 1 |
-| MySQL | 3306 | K3S 外部（或 StatefulSet） | 1 |
+| MySQL | 3306 | K3S StatefulSet + Service + PVC | 1 |
 | Redis | 6379 | K3S Deployment + Service | 1 |
 | RocketMQ | 9876 | K3S Deployment + Service | 1 |
 | Seata Server | 8091 | K3S Deployment + Service | 1 |
@@ -482,7 +482,7 @@ graph TD
 ### 7.3 启动顺序
 
 ```
-Nacos → MySQL → Redis → RocketMQ → Seata Server
+MySQL → Redis → Nacos → RocketMQ → Seata Server
   → User Service → Menu Service → Pickup Service
   → Order Service → Gateway → 前端
 ```
