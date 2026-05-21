@@ -78,11 +78,11 @@ class AuthServiceImplTest {
         when(servletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-        LoginVO loginVO = authService.loginByPassword(new PasswordLoginRequest("user01", "123456"), servletRequest);
+        LoginVO loginVO = authService.loginByPassword(new PasswordLoginRequest("13800000001", "123456"), servletRequest);
 
         assertThat(loginVO.accessToken()).isNotBlank();
         assertThat(loginVO.refreshToken()).isNotBlank();
-        assertThat(loginVO.userInfo().username()).isEqualTo("user01");
+        assertThat(loginVO.userInfo().username()).isEqualTo("13800000001");
         verify(refreshTokenMapper).insert(any(RefreshToken.class));
         verify(valueOperations).set(eq("token:refresh:1000001"), any(), eq(Duration.ofDays(7)));
         verify(loginLogMapper).insert(any(LoginLog.class));
@@ -94,7 +94,7 @@ class AuthServiceImplTest {
         when(userMapper.selectOne(any())).thenReturn(user);
         when(passwordEncoder.matches("bad", "hash")).thenReturn(false);
 
-        assertThatThrownBy(() -> authService.loginByPassword(new PasswordLoginRequest("user01", "bad"), servletRequest))
+        assertThatThrownBy(() -> authService.loginByPassword(new PasswordLoginRequest("13800000001", "bad"), servletRequest))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("账号或密码错误");
     }
@@ -102,7 +102,8 @@ class AuthServiceImplTest {
     private User user() {
         User user = new User();
         user.setId(1000001L);
-        user.setUsername("user01");
+        user.setUsername("13800000001");
+        user.setPhone("13800000001");
         user.setPasswordHash("hash");
         user.setRole("USER");
         user.setStatus(1);

@@ -161,7 +161,7 @@ com.smartcanteen.common/
 |--------|------------|---------|------|
 | `UNAUTHORIZED` | 401 | Token 无效或已过期 | Token 校验不通过 |
 | `FORBIDDEN` | 403 | 无权限访问 | 角色或数据归属不符 |
-| `USER_EXISTS` | 400 | 该账号已被注册 | 手机号或学工号已存在 |
+| `USER_EXISTS` | 400 | 该账号已被注册 | 手机号或学工号已绑定 |
 | `INVALID_CREDENTIALS` | 401 | 账号或密码错误 | 登录失败，不区分原因 |
 | `ACCOUNT_DISABLED` | 403 | 账号已被禁用 | 账号被管理员停用 |
 | `INVALID_VERIFY_CODE` | 400 | 验证码无效 | 验证码错误或过期 |
@@ -188,7 +188,7 @@ com.smartcanteen.common/
 |--------|------|------|
 | `X-User-Id` | 当前用户 ID | `1234567890` |
 | `X-User-Role` | 当前用户角色 | `USER` / `MERCHANT` / `ADMIN` |
-| `X-Username` | 当前用户名（手机号或学工号） | `13800138000` |
+| `X-Username` | 当前用户名（手机号） | `13800138000` |
 
 角色枚举值：
 
@@ -226,9 +226,9 @@ com.smartcanteen.common/
 
 **核销方式（VerifyType）：** `SCAN` 扫码核销 / `MANUAL` 手动输入取餐码核销
 
-**库存变更类型（InventoryChangeType）：** `RESERVE` 预占（创建待支付订单） / `RELEASE` 释放恢复（取消/拒绝/超时） / `CONSUME` 核销确认扣减（核销完成后减少 `reserved_stock`）
+**库存变更类型（InventoryChangeType）：** `RESET` 每日库存重置 / `RESERVE` 预占（创建待支付订单） / `RELEASE` 释放恢复（取消/拒绝/超时） / `CONSUME` 核销确认扣减（核销完成后减少 `reserved_stock`）
 
-库存生命周期：创建待支付订单时 `remaining_stock - quantity, reserved_stock + quantity`（RESERVE）；取消/拒绝/超时时反向操作（RELEASE）；核销完成后 `reserved_stock - quantity`（CONSUME），已售量通过 `total_stock - remaining_stock - reserved_stock` 推导。
+库存生命周期：每日重置任务按 `daily_stock` 初始化当天库存（RESET）；创建待支付订单时 `remaining_stock - quantity, reserved_stock + quantity`（RESERVE）；取消/拒绝/超时时反向操作（RELEASE）；核销完成后 `reserved_stock - quantity`（CONSUME），已售量通过 `total_stock - remaining_stock - reserved_stock` 推导。
 
 **取餐号重置规则（ResetRule）：** `NONE` 不重置（到达 Z999 后回到 A001） / `DAILY` 每天重置 / `WEEKLY` 每周重置
 
@@ -243,11 +243,11 @@ com.smartcanteen.common/
 | 字段名 | 类型 | 长度 | 必填 | 默认值 | 说明 |
 |--------|------|------|------|--------|------|
 | `id` | BIGINT | - | 是 | 雪花算法 | 主键 |
-| `username` | VARCHAR | 20 | 是 | - | 手机号或学工号，唯一索引 UNIQUE |
-| `phone` | VARCHAR | 11 | 否 | NULL | 手机号（用于手机号注册） |
-| `student_no` | VARCHAR | 20 | 否 | NULL | 学工号（用于学工号注册） |
+| `username` | VARCHAR | 20 | 是 | - | 手机号，唯一索引 UNIQUE |
+| `phone` | VARCHAR | 11 | 是 | - | 手机号，注册必填，与 username 一致 |
+| `student_no` | VARCHAR | 20 | 否 | NULL | 学工号，可为空 |
 | `password_hash` | VARCHAR | 128 | 是 | - | BCrypt 密码哈希 |
-| `pay_password` | VARCHAR | 32 | 是 | `123456` | 支付密码（模拟实现，明文存储，注册时默认 `123456`，用户可修改） |
+| `pay_password` | VARCHAR | 32 | 是 | `123456` | 支付密码（模拟实现，明文存储，注册时默认 `123456`，用户不可修改） |
 | `nickname` | VARCHAR | 50 | 否 | NULL | 昵称/姓名 |
 | `avatar` | VARCHAR | 255 | 否 | NULL | 头像 URL |
 | `role` | VARCHAR | 20 | 是 | `USER` | 角色：USER / MERCHANT / ADMIN |
@@ -255,7 +255,7 @@ com.smartcanteen.common/
 | `create_time` | DATETIME | - | 是 | CURRENT_TIMESTAMP | 创建时间 |
 | `update_time` | DATETIME | - | 是 | CURRENT_TIMESTAMP | 更新时间，ON UPDATE |
 
-索引：`uk_username (username UNIQUE)`, `idx_phone (phone)`, `idx_student_no (student_no)`, `idx_role (role)`
+索引：`uk_username (username UNIQUE)`, `uk_phone (phone UNIQUE)`, `uk_student_no (student_no UNIQUE)`, `idx_role (role)`
 
 #### 3.1.2 login_log（登录日志表）
 
@@ -305,7 +305,6 @@ com.smartcanteen.common/
 | `id` | BIGINT | - | 是 | 主键，即窗口编号 |
 | `merchant_id` | BIGINT | - | 是 | 所属商家 ID |
 | `name` | VARCHAR | 100 | 是 | 窗口名称 |
-| `floor` | VARCHAR | 20 | 否 | 所在楼层 |
 | `category` | VARCHAR | 50 | 否 | 窗口类型/分类 |
 | `status` | TINYINT | - | 是 | 1=正常, 0=停用 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
@@ -341,18 +340,20 @@ com.smartcanteen.common/
 
 索引：`idx_merchant_id (merchant_id)`, `idx_category_id (category_id)`, `idx_status (status)`
 
-#### 3.2.5 daily_menu（每日菜单表）
+#### 3.2.5 daily_menu（每日菜单配置表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
 | `stall_id` | BIGINT | - | 是 | 所属窗口 ID |
-| `menu_date` | DATE | - | 是 | 菜单日期 |
 | `meal_period` | VARCHAR | 20 | 是 | 售卖时段：BREAKFAST/LUNCH/DINNER/SNACK |
-| `status` | TINYINT | - | 是 | 1=已发布, 0=草稿 |
+| `status` | TINYINT | - | 是 | 1=启用, 0=停用 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
+| `update_time` | DATETIME | - | 是 | 更新时间 |
 
-索引：`uk_stall_date_period (stall_id, menu_date, meal_period UNIQUE)`
+索引：`uk_stall_period (stall_id, meal_period UNIQUE)`
+
+> `daily_menu` 表用于维护可重复使用的每日菜单配置，不按日期创建。若后续需要支持某一天的特殊菜单，建议额外设计 `special_menu` 表，不与普通每日菜单配置混用。
 
 #### 3.2.6 daily_menu_item（每日菜单菜品项）
 
@@ -361,15 +362,19 @@ com.smartcanteen.common/
 | `id` | BIGINT | - | 是 | 主键 |
 | `daily_menu_id` | BIGINT | - | 是 | 关联每日菜单 ID |
 | `dish_id` | BIGINT | - | 是 | 关联菜品 ID |
-| `total_stock` | INT | - | 是 | 总库存，≥ 0 |
-| `remaining_stock` | INT | - | 是 | 剩余库存 = total - reserved |
-| `reserved_stock` | INT | - | 是 | 预占库存（待支付订单已预占但未确认） |
+| `daily_stock` | INT | - | 是 | 每日自动重置库存数量，即商家设置的固定库存值 |
+| `total_stock` | INT | - | 是 | 当天总库存，每日重置时设置为 `daily_stock` |
+| `remaining_stock` | INT | - | 是 | 当天剩余库存，每日重置时设置为 `daily_stock` |
+| `reserved_stock` | INT | - | 是 | 当天预占库存，每日重置时设置为 0 |
 | `alert_threshold` | INT | - | 是 | 库存预警阈值 |
 | `is_listed` | TINYINT | - | 是 | 1=上架, 0=下架 |
-| `price_override` | DECIMAL | 10,2 | 否 | 覆盖价格（NULL 则使用菜品原价） |
+| `last_reset_date` | DATE | - | 否 | 最近一次库存自动重置日期，防止重复重置 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
+| `update_time` | DATETIME | - | 是 | 更新时间 |
 
 索引：`idx_menu_id (daily_menu_id)`, `idx_dish_id (dish_id)`, `unique uk_menu_dish (daily_menu_id, dish_id UNIQUE)`
+
+价格逻辑：下单时直接读取 `dish.price` 作为单价快照，写入 `order_item.unit_price`。菜品价格调整时直接修改 `dish.price`；历史订单价格不受影响，因为 `order_item.unit_price` 保存的是下单时快照。
 
 #### 3.2.7 inventory_log（库存变更日志表）
 
@@ -377,7 +382,7 @@ com.smartcanteen.common/
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
 | `daily_menu_item_id` | BIGINT | - | 是 | 关联每日菜单菜品项 ID |
-| `change_type` | VARCHAR | 20 | 是 | RESERVE/RELEASE/CONSUME |
+| `change_type` | VARCHAR | 20 | 是 | RESET/RESERVE/RELEASE/CONSUME |
 | `change_amount` | INT | - | 是 | 变更数量（正=增加，负=减少） |
 | `before_remaining` | INT | - | 是 | 变更前剩余库存 |
 | `after_remaining` | INT | - | 是 | 变更后剩余库存 |
@@ -669,7 +674,8 @@ com.smartcanteen.common/
 **请求体：**
 ```json
 {
-  "username": "13800138000",
+  "phone": "13800138000",
+  "studentNo": "20260001",
   "password": "Abc@1234",
   "payPassword": "123456",
   "verifyCode": "123456",
@@ -679,10 +685,11 @@ com.smartcanteen.common/
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `username` | String | 是 | 手机号或学工号 |
+| `phone` | String | 是 | 手机号，注册后作为 username，全局唯一 |
+| `studentNo` | String | 否 | 学工号，可为空，填写后需唯一 |
 | `password` | String | 是 | 登录密码，≥6 位 |
 | `payPassword` | String | 是 | 支付密码，≥6 位，明文存储（模拟实现，默认 `123456`） |
-| `verifyCode` | String | 是 | 验证码 |
+| `verifyCode` | String | 是 | 手机号验证码 |
 | `nickname` | String | 否 | 姓名/昵称 |
 
 **响应示例（成功）：**
@@ -746,7 +753,7 @@ com.smartcanteen.common/
 **请求体：**
 ```json
 {
-  "username": "13800138000",
+  "phone": "13800138000",
   "verifyCode": "123456"
 }
 ```
@@ -825,11 +832,22 @@ com.smartcanteen.common/
 ```json
 {
   "nickname": "张三三",
-  "avatar": "https://..."
+  "avatar": "https://...",
+  "phone": "13900139000",
+  "studentNo": "20260002",
+  "oldPhoneVerifyCode": "123456",
+  "newPhoneVerifyCode": "123456",
+  "studentNoVerifyCode": "123456"
 }
 ```
 
-可修改字段：`nickname`, `avatar`, `phone`, `password`（需提供原密码）。
+可修改字段：`nickname`, `avatar`, `phone`, `studentNo`。
+
+验证规则：
+- 修改 `phone` 时，必须先校验旧手机号验证码 `oldPhoneVerifyCode`，再校验新手机号验证码 `newPhoneVerifyCode`；任一验证码无效则整次修改失败，不更新任何字段。
+- 修改 `studentNo` 时，必须校验当前手机号验证码 `studentNoVerifyCode`；验证码无效则整次修改失败。
+- `phone` 修改成功后同步更新 `username`，确保 username 始终等于手机号。
+- `studentNo` 可置空，非空时必须唯一。
 
 #### 4.1.9 验证支付密码（Feign 内部接口）
 
@@ -902,28 +920,27 @@ com.smartcanteen.common/
 
 #### 4.2.4 每日菜单 CRUD
 
-**创建/发布每日菜单：** `POST /api/menu/daily-menus`
+**创建/保存每日菜单配置：** `POST /api/menu/daily-menus`
 ```json
 {
   "stallId": 1001,
-  "menuDate": "2026-05-15",
   "mealPeriod": "LUNCH",
   "items": [
     {
       "dishId": 1,
-      "totalStock": 100,
+      "dailyStock": 100,
       "alertThreshold": 10,
-      "priceOverride": null
+      "isListed": 1
     }
   ]
 }
 ```
 
 **查询每日菜单列表：** `GET /api/menu/daily-menus`
-- 请求参数：`stallId`, `menuDate`, `mealPeriod`
+- 请求参数：`stallId`, `mealPeriod`, `status`
 
 **修改每日菜单菜品：** `PUT /api/menu/daily-menus/{menuId}/items`
-- 支持调整库存、上下架状态
+- 支持调整 `daily_stock`、预警阈值和上下架状态
 
 #### 4.2.5 可售菜品浏览（用户端/游客用）
 
@@ -947,7 +964,7 @@ com.smartcanteen.common/
   "data": {
     "stalls": [
       {
-        "stallId": 1001, "stallName": "1号窗口", "floor": "1F",
+        "stallId": 1001, "stallName": "1号窗口",
         "categories": [
           {
             "categoryId": 1, "categoryName": "主食",
@@ -967,11 +984,11 @@ com.smartcanteen.common/
 ```
 
 **过滤逻辑：**
-1. 当前日期匹配 `menu_date`
-2. 当前时间在对应 `meal_period` 售卖时段内
-3. `is_listed = 1`
-4. `remaining_stock > 0`
-5. 菜品 `status = 1`（未停用）
+1. 当前时间在对应 `meal_period` 售卖时段内
+2. `daily_menu.status = 1`
+3. `daily_menu_item.is_listed = 1`
+4. `daily_menu_item.remaining_stock > 0`
+5. `dish.status = 1`（未停用）
 
 #### 4.2.6 库存预占（Feign 内部接口）
 
@@ -999,7 +1016,7 @@ com.smartcanteen.common/
 }
 ```
 
-**说明：** 此接口在 Seata AT 全局事务中调用。执行 `UPDATE daily_menu_item SET reserved_stock = reserved_stock + ?, remaining_stock = remaining_stock - ? WHERE id = ? AND remaining_stock >= ?`。若 `remaining_stock < quantity`，抛出 `INVALID_STOCK` 异常，Seata 回滚全局事务。
+**说明：** 此接口在 Seata AT 全局事务中调用。`remaining_stock` 和 `reserved_stock` 表示当天库存状态，每天由自动重置任务按 `daily_stock` 初始化。执行 `UPDATE daily_menu_item SET reserved_stock = reserved_stock + ?, remaining_stock = remaining_stock - ? WHERE id = ? AND remaining_stock >= ?`。若 `remaining_stock < quantity`，抛出 `INVALID_STOCK` 异常，Seata 回滚全局事务。
 
 #### 4.2.7 库存恢复（Feign 内部接口）
 
@@ -1034,7 +1051,22 @@ com.smartcanteen.common/
 
 **幂等策略：** 根据 `inventory_log` 中 `order_id` + `change_type = CONSUME` 判断是否已消费；已消费则直接返回成功，避免重复减少 `reserved_stock`。
 
-#### 4.2.9 库存预警查询
+#### 4.2.9 每日库存自动重置任务
+
+**触发时机：** 每天 00:00 执行，或每个售卖时段开始前执行一次。
+
+**处理逻辑：**
+1. 查询 `status = 1` 的 `daily_menu` 和 `is_listed = 1` 的 `daily_menu_item`
+2. 对 `last_reset_date != 当前日期` 的菜单项执行重置
+3. 设置 `total_stock = daily_stock`
+4. 设置 `remaining_stock = daily_stock`
+5. 设置 `reserved_stock = 0`
+6. 设置 `last_reset_date = 当前日期`
+7. 记录 `inventory_log`，`change_type = RESET`
+
+**幂等控制：** 同一 `daily_menu_item` 在同一天只能重置一次，通过 `last_reset_date` 控制。
+
+#### 4.2.10 库存预警查询
 
 | 项目 | 内容 |
 |------|------|
@@ -1042,7 +1074,7 @@ com.smartcanteen.common/
 | **鉴权** | 商家角色 |
 | **说明** | 查询当前商家 `remaining_stock <= alert_threshold` 的菜品列表。定时任务每 5 分钟扫描一次。 |
 
-#### 4.2.9 菜品图片上传与获取
+#### 4.2.11 菜品图片上传与获取
 
 图片不作为独立资源上传，而是在菜品创建/修改时以 `multipart/form-data` 方式附带。
 
@@ -1333,8 +1365,8 @@ com.smartcanteen.common/
   "data": {
     "stallId": 1001, "stallName": "1号窗口",
     "queue": [
-      { "pickupNo": "A003", "position": 1, "waitMinutes": 5 },
-      { "pickupNo": "A004", "position": 2, "waitMinutes": 3 }
+      { "pickupNo": "A003", "position": 1 },
+      { "pickupNo": "A004", "position": 2 }
     ],
     "total": 2
   }
@@ -1358,8 +1390,8 @@ com.smartcanteen.common/
   "data": {
     "stallId": 1001, "stallName": "1号窗口",
     "queue": [
-      { "pickupNo": "A001", "position": 1, "waitMinutes": 8 },
-      { "pickupNo": "A002", "position": 2, "waitMinutes": 5 }
+      { "pickupNo": "A001", "position": 1 },
+      { "pickupNo": "A002", "position": 2 }
     ],
     "total": 2
   }
@@ -1384,8 +1416,7 @@ com.smartcanteen.common/
     "pickupNo": "A005",
     "status": "PREPARING",
     "preparingPosition": 5,
-    "preparingAhead": 4,
-    "estimatedWaitMinutes": 15
+    "preparingAhead": 4
   }
 }
 ```
@@ -1528,7 +1559,7 @@ com.smartcanteen.common/
 **修改商家：** `PUT /api/admin/merchants/{merchantId}`
 
 **窗口管理：** `GET/POST/PUT /api/admin/stalls`
-- 新增窗口：`{ "merchantId": ..., "name": "1号窗口", "floor": "1F" }`
+- 新增窗口：`{ "merchantId": ..., "name": "1号窗口", "category": "盖浇饭" }`
 
 #### 4.5.3 系统配置
 
@@ -2215,7 +2246,7 @@ AuthGlobalFilter.filter(exchange, chain):
 
 | 职责 | 说明 |
 |------|------|
-| 用户注册 | 手机号/学工号注册，密码 BCrypt 加密 |
+| 用户注册 | 手机号注册，学工号可选，密码 BCrypt 加密 |
 | 用户登录 | 密码登录 + 验证码登录，签发双 Token |
 | Token 刷新 | 旧 Token 入黑名单，签发新 Token |
 | 用户信息维护 | 查询/修改个人资料、修改密码 |
@@ -2270,7 +2301,7 @@ public class UserServiceApplication {
 |------|------|
 | 菜品管理 | 商家对菜品的增删改查（逻辑删除） |
 | 分类管理 | 菜品分类维护 |
-| 每日菜单发布 | 按日期和售卖时段创建菜单及菜品项 |
+| 每日菜单配置 | 按窗口和售卖时段维护菜单菜品项、每日库存设定和上下架状态 |
 | 库存管理 | 库存预占（Feign，Seata AT 分支）、库存恢复、库存预警 |
 | 可售菜品查询 | 供用户端/游客端浏览当前可售菜品（公开接口） |
 | 上下架控制 | 商家对每日菜单菜品项上架/下架 |
@@ -2281,7 +2312,7 @@ public class UserServiceApplication {
 |----|------|------|
 | `DishController` | `@RestController` | 菜品 CRUD 接口 |
 | `CategoryController` | `@RestController` | 分类管理接口 |
-| `DailyMenuController` | `@RestController` | 每日菜单发布、查询接口 |
+| `DailyMenuController` | `@RestController` | 每日菜单配置、查询接口 |
 | `MenuBrowseController` | `@RestController` | 可售菜品浏览（公开） |
 | `InventoryController` | `@RestController` | 库存预占/恢复（Feign 内部接口）、库存预警查询 |
 | `DishService` / `DishServiceImpl` | Service | 菜品业务逻辑 |
@@ -2330,13 +2361,11 @@ WHERE id = #{id} AND remaining_stock >= #{quantity}
 ```
 MenuQueryService.getAvailableMenu(mealPeriod, stallId):
     now = LocalDateTime.now()
-    today = LocalDate.now()
     period = mealPeriod != null ? mealPeriod : getCurrentMealPeriod(now)
     
     menus = dailyMenuMapper.selectList(
-        menu_date = today
-        AND meal_period = period
-        AND status = 1  // 已发布
+        meal_period = period
+        AND status = 1  // 启用
     )
     
     items = dailyMenuItemMapper.selectList(
@@ -2821,7 +2850,7 @@ public class LoginUser {
 | 页面 | 路由 | 说明 |
 |------|------|------|
 | 登录页 | `/login` | 密码登录 + 验证码登录 Tab 切换 |
-| 注册页 | `/register` | 手机号/学工号注册，含验证码 |
+| 注册页 | `/register` | 手机号注册，学工号可选，含验证码 |
 | 首页/菜单浏览 | `/menu` | 展示当前可售菜品（游客可访问），按窗口/分类组织 |
 | 菜品详情 | `/menu/:dishId` | 菜品大图、描述、价格、加购按钮 |
 | 购物车 | 全局悬浮组件 | 底部导航栏上方悬浮，可展开/收起 |
@@ -2875,7 +2904,7 @@ public class LoginUser {
 | 订单处理首页 | `/orders` | 商家核心操作页，三栏布局 |
 | 菜品管理 | `/dishes` | 菜品列表、新增/编辑/删除（停用） |
 | 菜品分类管理 | `/categories` | 分类的增删改查 |
-| 每日菜单管理 | `/menu` | 按日期和时段发布菜单、设置库存 |
+| 每日菜单管理 | `/menu` | 按窗口和时段维护菜单配置，设置每日库存数量 |
 | 叫号核销页 | `/pickup` | 出餐叫号、手动叫号、扫码核销 |
 | 库存预警 | `/inventory/alerts` | 低库存菜品列表 |
 
@@ -2900,12 +2929,12 @@ public class LoginUser {
 - 失败：红色提示对应错误信息
 - 手动输入取餐码入口在页面底部，小号文字不醒目
 
-#### 7.2.3 每日菜单发布
+#### 7.2.3 每日菜单配置
 
-- 顶部：日期选择器 + 售卖时段下拉
+- 顶部：窗口选择器 + 售卖时段下拉
 - 左侧：菜品库（可搜索/按分类筛选），拖拽或点击添加到右侧
-- 右侧：已选菜品列表，每项设置：初始库存、预警阈值、上架开关、覆盖价格
-- 底部：保存草稿 / 发布按钮
+- 右侧：已选菜品列表，每项设置：每日库存数量、预警阈值、上架开关
+- 底部：保存每日菜单配置按钮
 
 ### 7.3 管理员 Web 端页面设计
 
@@ -3054,7 +3083,8 @@ router.beforeEach((to, from, next) => {
 
 | 场景 | 字段 | 规则 |
 |------|------|------|
-| 注册 | `username` | 必填，手机号 11 位或学工号 5-20 位 |
+| 注册 | `phone` | 必填，手机号 11 位，注册后作为 username |
+| 注册 | `studentNo` | 选填，学工号 5-20 位 |
 | 注册 | `password` | 必填，≥ 6 位 |
 | 注册 | `payPassword` | 必填，≥ 6 位 |
 | 注册 | `verifyCode` | 必填，4-6 位数字 |
@@ -3064,7 +3094,7 @@ router.beforeEach((to, from, next) => {
 | 新增菜品 | `name` | 必填，≤ 100 字 |
 | 新增菜品 | `price` | 必填，数字，≥ 0，最多 2 位小数 |
 | 新增菜品 | `categoryId` | 必填 |
-| 每日菜单 | `totalStock` | 必填，整数，≥ 0 |
+| 每日菜单 | `dailyStock` | 必填，整数，≥ 0 |
 | 每日菜单 | `alertThreshold` | 必填，整数，≥ 0 |
 | 下单 | `items` | 必填，非空数组；每个 item 的 quantity ≥ 1 |
 | 下单 | `stallId` | 必填 |
@@ -3551,7 +3581,7 @@ export default {
 | 模块 | 必测场景 |
 |------|---------|
 | 用户服务 | 注册成功、重复注册、登录成功、密码错误、Token 刷新、黑名单拦截 |
-| 菜品菜单服务 | 菜品 CRUD、菜单发布、可售菜品过滤、库存预占成功、库存不足 |
+| 菜品菜单服务 | 菜品 CRUD、菜单配置、可售菜品过滤、库存预占成功、库存不足 |
 | 订单服务 | 下单成功、库存不足回滚、支付成功、密码错误锁定、取消成功、超时取消 |
 | 取餐排队服务 | 入队成功、出队成功、取餐号递增、二维码核销、核销后失效 |
 
@@ -3641,7 +3671,7 @@ export default {
 | `DISH_CREATE` | 新增菜品 |
 | `DISH_UPDATE` | 修改菜品 |
 | `DISH_DISABLE` | 停用菜品 |
-| `MENU_PUBLISH` | 发布菜单 |
+| `MENU_SAVE` | 保存每日菜单配置 |
 | `STOCK_CHANGE` | 库存变更 |
 | `CONFIG_UPDATE` | 配置修改 |
 
@@ -3662,11 +3692,11 @@ export default {
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
 | `merchant` | 商家 | id, user_id, name, contact_name, contact_phone, status, create_time |
-| `stall` | 窗口 | id, merchant_id, name, floor, category, status, create_time |
+| `stall` | 窗口 | id, merchant_id, name, category, status, create_time |
 | `dish_category` | 菜品分类 | id, merchant_id, name, sort, create_time |
 | `dish` | 菜品 | id, merchant_id, category_id, name, image(MEDIUMBLOB), price, description, status, create_time |
-| `daily_menu` | 每日菜单 | id, stall_id, menu_date, meal_period, status, create_time |
-| `daily_menu_item` | 菜单菜品项 | id, daily_menu_id, dish_id, total_stock, remaining_stock, reserved_stock, alert_threshold, is_listed, price_override, create_time |
+| `daily_menu` | 每日菜单配置 | id, stall_id, meal_period, status, create_time, update_time |
+| `daily_menu_item` | 菜单菜品项 | id, daily_menu_id, dish_id, daily_stock, total_stock, remaining_stock, reserved_stock, alert_threshold, is_listed, last_reset_date, create_time, update_time |
 | `inventory_log` | 库存变更日志 | id, daily_menu_item_id, change_type, change_amount, before_remaining, after_remaining, order_id, create_time |
 
 #### 10.3.3 canteen_order
@@ -3708,7 +3738,7 @@ export default {
 | 13 | menu | POST | `/api/menu/dishes` | MERCHANT | 新增菜品 |
 | 14 | menu | PUT | `/api/menu/dishes/{id}` | MERCHANT | 修改菜品 |
 | 15 | menu | DELETE | `/api/menu/dishes/{id}` | MERCHANT | 停用菜品 |
-| 16 | menu | POST | `/api/menu/daily-menus` | MERCHANT | 发布每日菜单 |
+| 16 | menu | POST | `/api/menu/daily-menus` | MERCHANT | 保存每日菜单配置 |
 | 17 | menu | GET | `/api/menu/daily-menus` | MERCHANT | 每日菜单列表 |
 | 18 | menu | PUT | `/api/menu/daily-menus/{id}/items` | MERCHANT | 修改菜单项 |
 | 19 | menu | GET | `/api/menu/available` | 公开 | 可售菜品浏览 |

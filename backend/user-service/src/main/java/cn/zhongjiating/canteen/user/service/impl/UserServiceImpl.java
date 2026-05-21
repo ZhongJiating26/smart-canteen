@@ -18,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final String DEMO_VERIFY_CODE = "123456";
-
     private final UserMapper userMapper;
 
     private final VerifyCodeService verifyCodeService;
@@ -35,24 +33,26 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserInfoVO register(RegisterRequest request) {
-        String username = request.username().trim();
-        if (findByUsername(username) != null) {
+        String phone = request.phone().trim();
+        if (findByUsername(phone) != null) {
             throw new BusinessException(ErrorCode.USER_EXISTS);
         }
-        boolean phoneUsername = isPhone(username);
-        if (phoneUsername) {
-            verifyCodeService.verify(username, request.verifyCode());
-        } else if (!DEMO_VERIFY_CODE.equals(request.verifyCode())) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFY_CODE);
+        if (findByPhone(phone) != null) {
+            throw new BusinessException(ErrorCode.PHONE_BOUND);
         }
+        String studentNo = normalizeBlank(request.studentNo());
+        if (studentNo != null && findByStudentNo(studentNo) != null) {
+            throw new BusinessException(ErrorCode.USER_EXISTS, "学工号已被绑定");
+        }
+        verifyCodeService.verify(phone, request.verifyCode());
 
         User user = new User();
-        user.setUsername(username);
-        user.setPhone(phoneUsername ? username : null);
-        user.setStudentNo(phoneUsername ? null : username);
+        user.setUsername(phone);
+        user.setPhone(phone);
+        user.setStudentNo(studentNo);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setPayPassword(request.payPassword());
-        user.setNickname(normalizeNickname(request.nickname(), username));
+        user.setNickname(normalizeNickname(request.nickname(), phone));
         user.setRole(RoleEnum.USER.getCode());
         user.setStatus(1);
         userMapper.insert(user);
@@ -75,8 +75,33 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
         }
-        user.setNickname(request.nickname());
-        user.setAvatar(request.avatar());
+        String nickname = normalizeBlank(request.nickname());
+        String avatar = normalizeBlank(request.avatar());
+        String newPhone = normalizeBlank(request.phone());
+        String newStudentNo = normalizeBlank(request.studentNo());
+        boolean changePhone = newPhone != null && !newPhone.equals(user.getPhone());
+        boolean changeStudentNo = request.studentNo() != null && !equalsNullable(newStudentNo, user.getStudentNo());
+
+        if (changePhone) {
+            verifyPhoneChange(user, newPhone, request.oldPhoneVerifyCode(), request.newPhoneVerifyCode());
+        }
+        if (changeStudentNo) {
+            verifyStudentNoChange(user, newStudentNo, request.studentNoVerifyCode());
+        }
+
+        if (request.nickname() != null) {
+            user.setNickname(nickname);
+        }
+        if (request.avatar() != null) {
+            user.setAvatar(avatar);
+        }
+        if (changePhone) {
+            user.setUsername(newPhone);
+            user.setPhone(newPhone);
+        }
+        if (changeStudentNo) {
+            user.setStudentNo(newStudentNo);
+        }
         userMapper.updateById(user);
         return UserInfoVO.from(user);
     }
@@ -85,8 +110,12 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
     }
 
-    private boolean isPhone(String username) {
-        return username != null && username.matches("^1\\d{10}$");
+    private User findByPhone(String phone) {
+        return userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getPhone, phone));
+    }
+
+    private User findByStudentNo(String studentNo) {
+        return userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getStudentNo, studentNo));
     }
 
     private String normalizeNickname(String nickname, String username) {
@@ -94,5 +123,49 @@ public class UserServiceImpl implements UserService {
             return username;
         }
         return nickname.trim();
+    }
+
+    private void verifyPhoneChange(User user, String newPhone, String oldPhoneVerifyCode, String newPhoneVerifyCode) {
+        requireVerifyCode(oldPhoneVerifyCode, "旧手机号验证码不能为空");
+        requireVerifyCode(newPhoneVerifyCode, "新手机号验证码不能为空");
+        User existing = findByUsername(newPhone);
+        if (existing != null && !existing.getId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.PHONE_BOUND);
+        }
+        User phoneExisting = findByPhone(newPhone);
+        if (phoneExisting != null && !phoneExisting.getId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.PHONE_BOUND);
+        }
+        verifyCodeService.verify(user.getPhone(), oldPhoneVerifyCode);
+        verifyCodeService.verify(newPhone, newPhoneVerifyCode);
+    }
+
+    private void verifyStudentNoChange(User user, String newStudentNo, String verifyCode) {
+        requireVerifyCode(verifyCode, "学工号修改验证码不能为空");
+        User existing = newStudentNo == null ? null : findByStudentNo(newStudentNo);
+        if (existing != null && !existing.getId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.USER_EXISTS, "学工号已被绑定");
+        }
+        verifyCodeService.verify(user.getPhone(), verifyCode);
+    }
+
+    private void requireVerifyCode(String verifyCode, String message) {
+        if (verifyCode == null || verifyCode.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_VERIFY_CODE, message);
+        }
+    }
+
+    private String normalizeBlank(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private boolean equalsNullable(String left, String right) {
+        if (left == null) {
+            return right == null;
+        }
+        return left.equals(right);
     }
 }

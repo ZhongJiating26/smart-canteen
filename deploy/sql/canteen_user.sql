@@ -9,7 +9,7 @@ USE `canteen_user`;
 
 CREATE TABLE IF NOT EXISTS `user` (
     `id` BIGINT NOT NULL COMMENT '主键，雪花算法生成',
-    `username` VARCHAR(20) NOT NULL COMMENT '手机号或学工号',
+    `username` VARCHAR(20) NOT NULL COMMENT '用户名，当前与手机号一致',
     `phone` VARCHAR(11) DEFAULT NULL COMMENT '手机号',
     `student_no` VARCHAR(20) DEFAULT NULL COMMENT '学工号',
     `password_hash` VARCHAR(128) NOT NULL COMMENT 'BCrypt 密码哈希',
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_username` (`username`),
-    KEY `idx_phone` (`phone`),
-    KEY `idx_student_no` (`student_no`),
+    UNIQUE KEY `uk_phone` (`phone`),
+    UNIQUE KEY `uk_student_no` (`student_no`),
     KEY `idx_role` (`role`),
     CONSTRAINT `ck_user_role` CHECK (`role` IN ('USER', 'MERCHANT', 'ADMIN')),
     CONSTRAINT `ck_user_status` CHECK (`status` IN (0, 1))

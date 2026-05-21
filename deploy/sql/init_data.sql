@@ -2,9 +2,9 @@
 -- Execute after canteen_*.sql and seata_undo_log.sql.
 
 -- Demo accounts:
--- user01 / 123456
--- merchant01 / 123456
--- admin / 123456
+-- 13800000001 / 123456
+-- 13800000002 / 123456
+-- 13800000003 / 123456
 SET @demo_password_hash = '$2a$10$76A4G48cbNH2lFWj7rjlZOl6AFtVeLLS9gDki7m7sohyncHJLAcmq';
 
 USE `canteen_user`;
@@ -13,9 +13,9 @@ INSERT IGNORE INTO `user` (
     `id`, `username`, `phone`, `student_no`, `password_hash`, `pay_password`,
     `nickname`, `avatar`, `role`, `status`
 ) VALUES
-    (1000001, 'user01', NULL, 'USER001', @demo_password_hash, '123456', '测试用户', NULL, 'USER', 1),
-    (1000002, 'merchant01', NULL, 'MERCHANT001', @demo_password_hash, '123456', '测试商家', NULL, 'MERCHANT', 1),
-    (1000003, 'admin', NULL, 'ADMIN001', @demo_password_hash, '123456', '系统管理员', NULL, 'ADMIN', 1);
+    (1000001, '13800000001', '13800000001', 'USER001', @demo_password_hash, '123456', '测试用户', NULL, 'USER', 1),
+    (1000002, '13800000002', '13800000002', 'MERCHANT001', @demo_password_hash, '123456', '测试商家', NULL, 'MERCHANT', 1),
+    (1000003, '13800000003', '13800000003', 'ADMIN001', @demo_password_hash, '123456', '系统管理员', NULL, 'ADMIN', 1);
 
 USE `canteen_menu`;
 
