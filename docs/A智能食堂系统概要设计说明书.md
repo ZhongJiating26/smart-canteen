@@ -279,7 +279,7 @@ flowchart TD
 | 数据域 | 归属服务 | 主要数据对象 | 说明 |
 | ------ | -------- | ------------ | ---- |
 | 用户数据域 | 用户服务 | 用户、角色、账号状态、支付密码、Token 相关记录 | 支撑注册、登录、鉴权、支付密码验证和用户资料维护 |
-| 菜品菜单数据域 | 菜品与菜单服务 | 商家、窗口、菜品、每日菜单、售卖时段、库存、库存预警 | 支撑菜单展示、库存预占、库存恢复和上下架控制 |
+| 菜品菜单数据域 | 菜品与菜单服务 | 商家、窗口、菜品、每日菜单、售卖时段、库存、库存预警 | 支撑菜单展示、库存预占、库存恢复和上下架控制。每日菜单作为窗口和售卖时段维度的长期配置，菜单项中保存菜品关联和每日库存设定值，系统每日自动根据设定值重置库存。 |
 | 订单数据域 | 订单服务 | 订单、订单明细、订单状态、取餐凭证快照、取消记录 | 支撑订单创建、支付验证、状态流转和取消 |
 | 取餐排队数据域 | 取餐与排队服务 | 取餐号序列、取餐二维码、取餐码、窗口制作中队列、窗口待取餐队列、叫号事件、核销记录、队列快照 | 取餐号、取餐二维码和取餐码由本服务生成和主责维护；订单服务保存必要的关联快照用于订单详情展示 |
 | 日志配置数据域 | 各服务或基础模块 | 操作日志、异常日志、系统配置 | 支撑审计、问题排查和业务规则配置 |
@@ -289,24 +289,37 @@ flowchart TD
 
 ```mermaid
 erDiagram
-    USER ||--o{ ORDER : creates
-    MERCHANT ||--o{ WINDOW : owns
-    WINDOW ||--o{ DISH : provides
-    DISH ||--o{ DAILY_MENU : appears_in
-    DAILY_MENU ||--|| INVENTORY : has
-    ORDER ||--o{ ORDER_ITEM : contains
-    ORDER ||--o| PREPARING_QUEUE_ITEM : enters_on_accept
-    ORDER ||--o| WAITING_QUEUE_ITEM : enters_on_dispatch
-    WINDOW ||--o{ PREPARING_QUEUE_ITEM : maintains_preparing
-    WINDOW ||--o{ WAITING_QUEUE_ITEM : maintains_waiting
+    USER ||--o{ FOOD_ORDER : creates
+
+    MERCHANT ||--o{ STALL : owns
+    MERCHANT ||--o{ DISH : manages
+    DISH_CATEGORY ||--o{ DISH : classifies
+
+    STALL ||--o{ DAILY_MENU : configures
+    DAILY_MENU ||--o{ DAILY_MENU_ITEM : contains
+    DISH ||--o{ DAILY_MENU_ITEM : selected_by
+
+    FOOD_ORDER ||--o{ ORDER_ITEM : contains
+    DAILY_MENU_ITEM ||--o{ ORDER_ITEM : ordered_as
+
+    FOOD_ORDER ||--o| PREPARING_QUEUE_ITEM : enters_on_accept
+    FOOD_ORDER ||--o| WAITING_QUEUE_ITEM : enters_on_dispatch
+
+    STALL ||--o{ PREPARING_QUEUE_ITEM : maintains_preparing
+    STALL ||--o{ WAITING_QUEUE_ITEM : maintains_waiting
+
     WAITING_QUEUE_ITEM ||--o{ CALL_EVENT : produces
-    ORDER ||--o| PICKUP_NUMBER : displays
+    FOOD_ORDER ||--o| PICKUP_QRCODE : generates_on_dispatch
+    FOOD_ORDER ||--o{ ORDER_STATUS_LOG : records_status
+    DAILY_MENU_ITEM ||--o{ INVENTORY_LOG : records_inventory_change
+
+    PICKUP_NUMBER_SEQUENCE ||..o{ FOOD_ORDER : generates_pickup_no
 ```
 
 数据架构说明：
 
 - 用户数据用于识别普通用户、商家和管理员身份，订单数据中只保存必要的用户关联信息。
-- 菜品与菜单数据用于表示某窗口在某日期和售卖时段内可售的菜品及库存状态。
+- 菜品与菜单数据用于表示某窗口在某售卖时段内的每日固定售卖菜品、每日库存设定值、当天剩余库存和库存状态。
 - 订单数据保存订单主信息、订单明细和取餐凭证，订单明细应保留下单时的菜品快照信息，避免菜品后续修改影响历史订单展示。
 - **制作中队列（PREPARING_QUEUE_ITEM）**：商家接单后订单进入制作中队列，按窗口独立维护，大屏实时展示。
 - **待取餐队列（WAITING_QUEUE_ITEM）**：商家出餐后订单从制作中队列移至待取餐队列，FIFO 仅作为展示排序和排队位置计算依据。

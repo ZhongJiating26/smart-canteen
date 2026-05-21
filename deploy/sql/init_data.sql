@@ -20,14 +20,9 @@ INSERT IGNORE INTO `user` (
 USE `canteen_menu`;
 
 INSERT IGNORE INTO `merchant` (
-    `id`, `user_id`, `name`, `contact_name`, `contact_phone`, `status`
+    `id`, `user_id`, `name`, `contact_name`, `contact_phone`, `category`, `status`
 ) VALUES
-    (2000001, 1000002, '一号食堂示范商家', '王店长', '13800000001', 1);
-
-INSERT IGNORE INTO `stall` (
-    `id`, `merchant_id`, `name`, `floor`, `category`, `status`
-) VALUES
-    (3000001, 2000001, '一号窗口', '1F', '综合快餐', 1);
+    (2000001, 1000002, '一号窗口', '王店长', '13800000001', '综合快餐', 1);
 
 INSERT IGNORE INTO `dish_category` (
     `id`, `merchant_id`, `name`, `sort`
@@ -51,29 +46,28 @@ INSERT IGNORE INTO `dish` (
     (5000010, 2000001, 4000003, '豆浆', NULL, 3.00, '现磨热豆浆', 1);
 
 INSERT INTO `daily_menu` (
-    `id`, `stall_id`, `menu_date`, `meal_period`, `status`
+    `id`, `merchant_id`, `meal_period`, `status`
 ) VALUES
-    (6000001, 3000001, CURDATE(), 'LUNCH', 1)
+    (6000001, 2000001, 'LUNCH', 1)
 ON DUPLICATE KEY UPDATE
-    `stall_id` = VALUES(`stall_id`),
-    `menu_date` = VALUES(`menu_date`),
+    `merchant_id` = VALUES(`merchant_id`),
     `meal_period` = VALUES(`meal_period`),
     `status` = VALUES(`status`);
 
 INSERT IGNORE INTO `daily_menu_item` (
-    `id`, `daily_menu_id`, `dish_id`, `total_stock`, `remaining_stock`,
-    `reserved_stock`, `alert_threshold`, `is_listed`, `price_override`
+    `id`, `daily_menu_id`, `dish_id`, `daily_stock`, `total_stock`, `remaining_stock`,
+    `reserved_stock`, `alert_threshold`, `is_listed`, `last_reset_date`
 ) VALUES
-    (7000001, 6000001, 5000001, 50, 50, 0, 10, 1, NULL),
-    (7000002, 6000001, 5000002, 50, 50, 0, 10, 1, NULL),
-    (7000003, 6000001, 5000003, 50, 50, 0, 10, 1, NULL),
-    (7000004, 6000001, 5000004, 50, 50, 0, 10, 1, NULL),
-    (7000005, 6000001, 5000005, 50, 50, 0, 10, 1, NULL),
-    (7000006, 6000001, 5000006, 50, 50, 0, 10, 1, NULL),
-    (7000007, 6000001, 5000007, 50, 50, 0, 10, 1, NULL),
-    (7000008, 6000001, 5000008, 50, 50, 0, 10, 1, NULL),
-    (7000009, 6000001, 5000009, 50, 50, 0, 10, 1, NULL),
-    (7000010, 6000001, 5000010, 50, 50, 0, 10, 1, NULL);
+    (7000001, 6000001, 5000001, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000002, 6000001, 5000002, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000003, 6000001, 5000003, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000004, 6000001, 5000004, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000005, 6000001, 5000005, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000006, 6000001, 5000006, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000007, 6000001, 5000007, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000008, 6000001, 5000008, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000009, 6000001, 5000009, 50, 50, 50, 0, 10, 1, CURDATE()),
+    (7000010, 6000001, 5000010, 50, 50, 50, 0, 10, 1, CURDATE());
 
 USE `canteen_pickup`;
 

@@ -10,7 +10,7 @@ USE `canteen_user`;
 CREATE TABLE IF NOT EXISTS `user` (
     `id` BIGINT NOT NULL COMMENT '主键，雪花算法生成',
     `username` VARCHAR(20) NOT NULL COMMENT '用户名，当前与手机号一致',
-    `phone` VARCHAR(11) DEFAULT NULL COMMENT '手机号',
+    `phone` VARCHAR(11) NOT NULL COMMENT '手机号',
     `student_no` VARCHAR(20) DEFAULT NULL COMMENT '学工号',
     `password_hash` VARCHAR(128) NOT NULL COMMENT 'BCrypt 密码哈希',
     `pay_password` VARCHAR(32) NOT NULL DEFAULT '123456' COMMENT '模拟支付密码，明文存储',

@@ -36,41 +36,41 @@ CREATE TABLE IF NOT EXISTS `pickup_qrcode` (
 
 CREATE TABLE IF NOT EXISTS `preparing_queue_item` (
     `id` BIGINT NOT NULL COMMENT '主键',
-    `stall_id` BIGINT NOT NULL COMMENT '窗口 ID',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家窗口 ID',
     `order_id` BIGINT NOT NULL COMMENT '订单 ID',
     `pickup_no` VARCHAR(10) NOT NULL COMMENT '取餐号',
     `enter_time` DATETIME NOT NULL COMMENT '进入制作中队列时间',
     `position` INT NOT NULL COMMENT '队列位置序号，从 1 开始',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_order_id` (`order_id`),
-    KEY `idx_stall_id_enter` (`stall_id`, `enter_time`),
+    KEY `idx_merchant_id_enter` (`merchant_id`, `enter_time`),
     KEY `idx_pickup_no` (`pickup_no`),
     CONSTRAINT `ck_preparing_queue_position` CHECK (`position` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='制作中队列项';
 
 CREATE TABLE IF NOT EXISTS `waiting_queue_item` (
     `id` BIGINT NOT NULL COMMENT '主键',
-    `stall_id` BIGINT NOT NULL COMMENT '窗口 ID',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家窗口 ID',
     `order_id` BIGINT NOT NULL COMMENT '订单 ID',
     `pickup_no` VARCHAR(10) NOT NULL COMMENT '取餐号',
     `enter_time` DATETIME NOT NULL COMMENT '进入待取餐队列时间',
     `position` INT NOT NULL COMMENT '队列位置序号',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_order_id` (`order_id`),
-    KEY `idx_stall_id_enter` (`stall_id`, `enter_time`),
+    KEY `idx_merchant_id_enter` (`merchant_id`, `enter_time`),
     KEY `idx_pickup_no` (`pickup_no`),
     CONSTRAINT `ck_waiting_queue_position` CHECK (`position` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='待取餐队列项';
 
 CREATE TABLE IF NOT EXISTS `call_event` (
     `id` BIGINT NOT NULL COMMENT '主键',
-    `stall_id` BIGINT NOT NULL COMMENT '窗口 ID',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家窗口 ID',
     `order_id` BIGINT NOT NULL COMMENT '订单 ID',
     `pickup_no` VARCHAR(10) NOT NULL COMMENT '取餐号',
     `call_type` VARCHAR(10) NOT NULL COMMENT 'AUTO/MANUAL',
     `call_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '叫号时间',
     PRIMARY KEY (`id`),
-    KEY `idx_stall_id_call_time` (`stall_id`, `call_time`),
+    KEY `idx_merchant_id_call_time` (`merchant_id`, `call_time`),
     KEY `idx_order_id` (`order_id`),
     KEY `idx_pickup_no` (`pickup_no`),
     CONSTRAINT `ck_call_event_type` CHECK (`call_type` IN ('AUTO', 'MANUAL'))
@@ -80,14 +80,14 @@ CREATE TABLE IF NOT EXISTS `verify_record` (
     `id` BIGINT NOT NULL COMMENT '主键',
     `order_id` BIGINT NOT NULL COMMENT '订单 ID',
     `qrcode_id` BIGINT NOT NULL COMMENT '取餐二维码 ID',
-    `stall_id` BIGINT NOT NULL COMMENT '核销窗口 ID',
+    `merchant_id` BIGINT NOT NULL COMMENT '核销商家窗口 ID',
     `verify_type` VARCHAR(10) NOT NULL COMMENT 'SCAN/MANUAL',
     `operator_id` BIGINT NOT NULL COMMENT '核销操作商家用户 ID',
     `verify_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '核销时间',
     PRIMARY KEY (`id`),
     KEY `idx_order_id` (`order_id`),
     KEY `idx_qrcode_id` (`qrcode_id`),
-    KEY `idx_stall_id_verify_time` (`stall_id`, `verify_time`),
+    KEY `idx_merchant_id_verify_time` (`merchant_id`, `verify_time`),
     CONSTRAINT `ck_verify_record_type` CHECK (`verify_type` IN ('SCAN', 'MANUAL'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='核销记录表';
 

@@ -291,27 +291,17 @@ com.smartcanteen.common/
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
 | `user_id` | BIGINT | - | 是 | 关联用户表 ID |
-| `name` | VARCHAR | 100 | 是 | 商家名称 |
+| `name` | VARCHAR | 100 | 是 | 商家/窗口名称 |
 | `contact_name` | VARCHAR | 50 | 否 | 负责人姓名 |
 | `contact_phone` | VARCHAR | 11 | 否 | 联系电话 |
+| `category` | VARCHAR | 50 | 否 | 经营类型/窗口分类 |
 | `status` | TINYINT | - | 是 | 1=正常, 0=停用 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
 | `update_time` | DATETIME | - | 是 | 更新时间 |
 
-#### 3.2.2 stall（窗口表）
+> 当前课程范围固定一个商家只有一个窗口，因此窗口信息合并到 `merchant` 表；商家 ID 同时作为窗口标识，后续订单、取餐中的窗口归属均复用该 ID。
 
-| 字段名 | 类型 | 长度 | 必填 | 说明 |
-|--------|------|------|------|------|
-| `id` | BIGINT | - | 是 | 主键，即窗口编号 |
-| `merchant_id` | BIGINT | - | 是 | 所属商家 ID |
-| `name` | VARCHAR | 100 | 是 | 窗口名称 |
-| `category` | VARCHAR | 50 | 否 | 窗口类型/分类 |
-| `status` | TINYINT | - | 是 | 1=正常, 0=停用 |
-| `create_time` | DATETIME | - | 是 | 创建时间 |
-
-索引：`idx_merchant_id (merchant_id)`
-
-#### 3.2.3 dish_category（菜品分类表）
+#### 3.2.2 dish_category（菜品分类表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
@@ -323,7 +313,7 @@ com.smartcanteen.common/
 
 索引：`idx_merchant_id (merchant_id)`
 
-#### 3.2.4 dish（菜品表）
+#### 3.2.3 dish（菜品表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
@@ -340,22 +330,22 @@ com.smartcanteen.common/
 
 索引：`idx_merchant_id (merchant_id)`, `idx_category_id (category_id)`, `idx_status (status)`
 
-#### 3.2.5 daily_menu（每日菜单配置表）
+#### 3.2.4 daily_menu（每日菜单配置表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
-| `stall_id` | BIGINT | - | 是 | 所属窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | 所属商家窗口 ID |
 | `meal_period` | VARCHAR | 20 | 是 | 售卖时段：BREAKFAST/LUNCH/DINNER/SNACK |
 | `status` | TINYINT | - | 是 | 1=启用, 0=停用 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
 | `update_time` | DATETIME | - | 是 | 更新时间 |
 
-索引：`uk_stall_period (stall_id, meal_period UNIQUE)`
+索引：`uk_merchant_period (merchant_id, meal_period UNIQUE)`
 
 > `daily_menu` 表用于维护可重复使用的每日菜单配置，不按日期创建。若后续需要支持某一天的特殊菜单，建议额外设计 `special_menu` 表，不与普通每日菜单配置混用。
 
-#### 3.2.6 daily_menu_item（每日菜单菜品项）
+#### 3.2.5 daily_menu_item（每日菜单菜品项）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
@@ -376,7 +366,7 @@ com.smartcanteen.common/
 
 价格逻辑：下单时直接读取 `dish.price` 作为单价快照，写入 `order_item.unit_price`。菜品价格调整时直接修改 `dish.price`；历史订单价格不受影响，因为 `order_item.unit_price` 保存的是下单时快照。
 
-#### 3.2.7 inventory_log（库存变更日志表）
+#### 3.2.6 inventory_log（库存变更日志表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
@@ -398,8 +388,7 @@ com.smartcanteen.common/
 | `id` | BIGINT | - | 是 | 雪花算法 | 主键 |
 | `order_no` | VARCHAR | 32 | 是 | - | 系统内部订单编号，全局唯一，永不重置 |
 | `user_id` | BIGINT | - | 是 | - | 下单用户 ID |
-| `merchant_id` | BIGINT | - | 是 | - | 商家 ID |
-| `stall_id` | BIGINT | - | 是 | - | 窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | - | 商家窗口 ID |
 | `total_amount` | DECIMAL | 10,2 | 是 | - | 订单总金额 |
 | `status` | VARCHAR | 20 | 是 | `PENDING_PAY` | 订单状态枚举值 |
 | `pickup_no` | VARCHAR | 10 | 否 | NULL | 取餐号（接单时生成），如 "A001" |
@@ -413,7 +402,7 @@ com.smartcanteen.common/
 | `create_time` | DATETIME | - | 是 | CURRENT_TIMESTAMP | 创建时间 |
 | `update_time` | DATETIME | - | 是 | CURRENT_TIMESTAMP | 更新时间 |
 
-索引：`uk_order_no (order_no UNIQUE)`, `idx_user_id_status (user_id, status)`, `idx_stall_id_status (stall_id, status)`, `idx_create_time (create_time)`
+索引：`uk_order_no (order_no UNIQUE)`, `idx_user_id_status (user_id, status)`, `idx_merchant_id_status (merchant_id, status)`, `idx_create_time (create_time)`
 
 #### 3.3.2 order_item（订单明细表）
 
@@ -477,39 +466,39 @@ com.smartcanteen.common/
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
-| `stall_id` | BIGINT | - | 是 | 窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | 商家窗口 ID |
 | `order_id` | BIGINT | - | 是 | 订单 ID，唯一索引 |
 | `pickup_no` | VARCHAR | 10 | 是 | 取餐号 |
 | `enter_time` | DATETIME | - | 是 | 进入队列时间（= 接单时间） |
 | `position` | INT | - | 是 | 队列位置序号，从 1 开始 |
 
-索引：`uk_order_id (order_id UNIQUE)`, `idx_stall_id_enter (stall_id, enter_time)`
+索引：`uk_order_id (order_id UNIQUE)`, `idx_merchant_id_enter (merchant_id, enter_time)`
 
 #### 3.4.4 waiting_queue_item（待取餐队列项）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
-| `stall_id` | BIGINT | - | 是 | 窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | 商家窗口 ID |
 | `order_id` | BIGINT | - | 是 | 订单 ID，唯一索引 |
 | `pickup_no` | VARCHAR | 10 | 是 | 取餐号 |
 | `enter_time` | DATETIME | - | 是 | 进入待取餐队列时间（= 出餐时间） |
 | `position` | INT | - | 是 | 队列位置序号（FIFO 插入时自动计算） |
 
-索引：`uk_order_id (order_id UNIQUE)`, `idx_stall_id_enter (stall_id, enter_time)`
+索引：`uk_order_id (order_id UNIQUE)`, `idx_merchant_id_enter (merchant_id, enter_time)`
 
 #### 3.4.5 call_event（叫号事件表）
 
 | 字段名 | 类型 | 长度 | 必填 | 说明 |
 |--------|------|------|------|------|
 | `id` | BIGINT | - | 是 | 主键 |
-| `stall_id` | BIGINT | - | 是 | 窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | 商家窗口 ID |
 | `order_id` | BIGINT | - | 是 | 订单 ID |
 | `pickup_no` | VARCHAR | 10 | 是 | 取餐号 |
 | `call_type` | VARCHAR | 10 | 是 | AUTO（出餐自动）/ MANUAL（商家手动） |
 | `call_time` | DATETIME | - | 是 | 叫号时间 |
 
-索引：`idx_stall_id_call_time (stall_id, call_time)`, `idx_order_id (order_id)`
+索引：`idx_merchant_id_call_time (merchant_id, call_time)`, `idx_order_id (order_id)`
 
 #### 3.4.6 verify_record（核销记录表）
 
@@ -518,7 +507,7 @@ com.smartcanteen.common/
 | `id` | BIGINT | - | 是 | 主键 |
 | `order_id` | BIGINT | - | 是 | 订单 ID |
 | `qrcode_id` | BIGINT | - | 是 | 取餐二维码 ID |
-| `stall_id` | BIGINT | - | 是 | 核销窗口 ID |
+| `merchant_id` | BIGINT | - | 是 | 核销商家窗口 ID |
 | `verify_type` | VARCHAR | 10 | 是 | SCAN（扫码）/ MANUAL（手动输入取餐码） |
 | `operator_id` | BIGINT | - | 是 | 核销操作的商家用户 ID |
 | `verify_time` | DATETIME | - | 是 | 核销时间 |
@@ -565,8 +554,8 @@ com.smartcanteen.common/
 | `token:refresh:{userId}` | String | 7d | 记录用户当前有效 refresh_token jti，登录后覆盖 | user-service |
 | `pay_lock:{userId}` | String | 30 min | 支付密码错误锁定标记，连续错误 5 次后设置 | user-service |
 | `pay_error:{userId}` | String | 30 min | 支付密码错误次数计数器 | user-service |
-| `queue:preparing:{stallId}` | List | 无 | 制作中队列快照（JSON 数组） | pickup-service |
-| `queue:waiting:{stallId}` | List | 无 | 待取餐队列快照（JSON 数组） | pickup-service |
+| `queue:preparing:{merchantId}` | List | 无 | 制作中队列快照（JSON 数组） | pickup-service |
+| `queue:waiting:{merchantId}` | List | 无 | 待取餐队列快照（JSON 数组） | pickup-service |
 | `ratelimit:ip:{ip}` | String | 1s 滑动窗口 | IP 级限流桶 | gateway |
 | `ratelimit:user:{userId}` | String | 1s 滑动窗口 | 用户级限流桶 | gateway |
 | `ratelimit:sensitive:{ip}:{path}` | String | 1 min | 敏感接口限流（登录/注册/验证码） | gateway |
@@ -617,8 +606,8 @@ com.smartcanteen.common/
 ```json
 {
   "type": "CALL_NOTIFY",
-  "stallId": 1001,
-  "stallName": "1号窗口",
+  "merchantId": 2000001,
+  "merchantName": "1号窗口",
   "data": {},
   "timestamp": "2026-05-14T12:05:30"
 }
@@ -632,7 +621,7 @@ com.smartcanteen.common/
 | `WAITING_UPDATE` | 订单进入/离开待取餐队列 | 大屏端 | `{ "waitingList": [...] }` |
 | `CALL_NOTIFY` | 出餐自动叫号 / 商家手动叫号 | 大屏端 | `{ "orderId": ..., "pickupNo": "A005", "callType": "AUTO" }` |
 
-**大屏端 WebSocket 连接：** `ws://{host}/ws/screen/{stallId}` — 每个大屏窗口建立独立连接，订阅指定窗口的队列信息。
+**大屏端 WebSocket 连接：** `ws://{host}/ws/screen/{merchantId}` — 每个大屏商家窗口建立独立连接，订阅指定窗口的队列信息。
 
 **用户端轮询方案：** 订单详情页和我的订单页每隔 5 秒通过 `GET /api/order/{orderId}` 刷新订单状态和取餐号/取餐二维码。制作中和待取餐的订单前端自动触发轮询；已完成或已取消的订单停止轮询。出餐叫号后用户下次轮询即可获取到取餐二维码。
 
@@ -923,7 +912,7 @@ com.smartcanteen.common/
 **创建/保存每日菜单配置：** `POST /api/menu/daily-menus`
 ```json
 {
-  "stallId": 1001,
+  "merchantId": 2000001,
   "mealPeriod": "LUNCH",
   "items": [
     {
@@ -937,7 +926,7 @@ com.smartcanteen.common/
 ```
 
 **查询每日菜单列表：** `GET /api/menu/daily-menus`
-- 请求参数：`stallId`, `mealPeriod`, `status`
+- 请求参数：`merchantId`, `mealPeriod`, `status`
 
 **修改每日菜单菜品：** `PUT /api/menu/daily-menus/{menuId}/items`
 - 支持调整 `daily_stock`、预警阈值和上下架状态
@@ -953,7 +942,7 @@ com.smartcanteen.common/
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `stallId` | Long | 否 | 按窗口筛选 |
+| `merchantId` | Long | 否 | 按商家窗口筛选 |
 | `mealPeriod` | String | 否 | 按售卖时段筛选，不传则返回当前时段 |
 | `categoryId` | Long | 否 | 按分类筛选 |
 
@@ -962,9 +951,9 @@ com.smartcanteen.common/
 {
   "code": 200, "message": "success",
   "data": {
-    "stalls": [
+    "merchants": [
       {
-        "stallId": 1001, "stallName": "1号窗口",
+        "merchantId": 2000001, "merchantName": "1号窗口",
         "categories": [
           {
             "categoryId": 1, "categoryName": "主食",
@@ -1101,7 +1090,7 @@ com.smartcanteen.common/
 **请求体：**
 ```json
 {
-  "stallId": 1001,
+  "merchantId": 2000001,
   "remark": "少辣",
   "items": [
     { "dailyMenuItemId": 10, "quantity": 2 },
@@ -1239,7 +1228,7 @@ com.smartcanteen.common/
     "called": true,
     "lastCallTime": "2026-05-14T12:30:00",
     "hasQrcode": true,
-    "stallName": "1号窗口",
+    "merchantName": "1号窗口",
     "cancelWindowRemaining": null
   }
 }
@@ -1273,7 +1262,7 @@ com.smartcanteen.common/
     "status": "PREPARING",
     "totalAmount": 35.00,
     "pickupNo": "A005",
-    "stallName": "1号窗口",
+    "merchantName": "1号窗口",
     "items": [
       { "dishName": "宫保鸡丁", "unitPrice": 15.00, "quantity": 2, "subtotal": 30.00 },
       { "dishName": "米饭", "unitPrice": 5.00, "quantity": 1, "subtotal": 5.00 }
@@ -1345,7 +1334,7 @@ com.smartcanteen.common/
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `status` | String | 否 | 不传返回全部进行中订单（PAID/PREPARING/READY），传值按状态筛选 |
-| `stallId` | Long | 否 | 不传返回商家所有窗口订单 |
+| `merchantId` | Long | 否 | 当前范围固定为当前商家窗口 |
 
 ---
 
@@ -1355,7 +1344,7 @@ com.smartcanteen.common/
 
 | 项目 | 内容 |
 |------|------|
-| **接口路径** | `GET /api/pickup/preparing/{stallId}` |
+| **接口路径** | `GET /api/pickup/preparing/{merchantId}` |
 | **鉴权** | 公开接口（大屏展示用） |
 
 **响应：**
@@ -1363,7 +1352,7 @@ com.smartcanteen.common/
 {
   "code": 200, "message": "success",
   "data": {
-    "stallId": 1001, "stallName": "1号窗口",
+    "merchantId": 2000001, "merchantName": "1号窗口",
     "queue": [
       { "pickupNo": "A003", "position": 1 },
       { "pickupNo": "A004", "position": 2 }
@@ -1374,13 +1363,13 @@ com.smartcanteen.common/
 ```
 
 > 公开接口不暴露 `orderId`。商家端如需 `orderId` 以进行后续操作（出餐、叫号、核销），通过商家鉴权接口获取。
-**说明：** 优先从 Redis `queue:preparing:{stallId}` 读取，缓存未命中则从 DB 查询并刷新缓存。
+**说明：** 优先从 Redis `queue:preparing:{merchantId}` 读取，缓存未命中则从 DB 查询并刷新缓存。
 
 #### 4.4.2 查询窗口待取餐队列
 
 | 项目 | 内容 |
 |------|------|
-| **接口路径** | `GET /api/pickup/waiting/{stallId}` |
+| **接口路径** | `GET /api/pickup/waiting/{merchantId}` |
 | **鉴权** | 公开接口 |
 
 **响应：**
@@ -1388,7 +1377,7 @@ com.smartcanteen.common/
 {
   "code": 200, "message": "success",
   "data": {
-    "stallId": 1001, "stallName": "1号窗口",
+    "merchantId": 2000001, "merchantName": "1号窗口",
     "queue": [
       { "pickupNo": "A001", "position": 1 },
       { "pickupNo": "A002", "position": 2 }
@@ -1453,7 +1442,7 @@ com.smartcanteen.common/
 **请求体：**
 ```json
 {
-  "stallId": 1001,
+  "merchantId": 2000001,
   "orderId": 1234567890
 }
 ```
@@ -1470,7 +1459,7 @@ com.smartcanteen.common/
 **请求体（扫码核销）：**
 ```json
 {
-  "stallId": 1001,
+  "merchantId": 2000001,
   "qrcodeContent": "{\"orderId\":1234567890,\"code\":\"8a7b3c2d1e4f...\"}",
   "verifyType": "SCAN"
 }
@@ -1479,7 +1468,7 @@ com.smartcanteen.common/
 **请求体（手动输入取餐码核销）：**
 ```json
 {
-  "stallId": 1001,
+  "merchantId": 2000001,
   "pickupCode": "8a7b3c2d1e4f5a6b7c8d9e0f",
   "verifyType": "MANUAL"
 }
@@ -1502,10 +1491,10 @@ com.smartcanteen.common/
 
 | 项目 | 内容 |
 |------|------|
-| **接口路径** | `GET /api/pickup/snapshot/{stallId}` |
+| **接口路径** | `GET /api/pickup/snapshot/{merchantId}` |
 | **鉴权** | 公开接口 |
 
-**响应：** 同时返回 `stallId` 窗口的制作中队列和待取餐队列（最近 30 个叫号事件），供大屏重连后恢复。
+**响应：** 同时返回 `merchantId` 商家窗口的制作中队列和待取餐队列（最近 30 个叫号事件），供大屏重连后恢复。
 
 **说明：** 此接口用于 WebSocket 断连后大屏恢复初始状态。数据来源为 MySQL 持久化数据，确保可恢复。
 
@@ -1533,19 +1522,20 @@ com.smartcanteen.common/
 - 请求体：`{ "password": "newPass123" }`
 - 密码 ≥ 6 位
 
-#### 4.5.2 商家与窗口管理
+#### 4.5.2 商家窗口管理
 
-**商家列表：** `GET /api/admin/merchants`
+**商家窗口列表：** `GET /api/admin/merchants`
 - 请求参数：`page`, `size`, `keyword`（商家名称）
 
-**新增商家：** `POST /api/admin/merchants`
+**新增商家窗口：** `POST /api/admin/merchants`
 ```json
 {
-  "username": "merchant01",
+  "phone": "13800138004",
   "password": "123456",
   "name": "张记美食",
   "contactName": "张三",
-  "contactPhone": "13800138001"
+  "contactPhone": "13800138001",
+  "category": "盖浇饭"
 }
 ```
 
@@ -1553,13 +1543,12 @@ com.smartcanteen.common/
 1. admin 调用 gateway → menu-service 的 `/api/admin/merchants` 接口
 2. menu-service 先 Feign 调用 user-service 创建商家登录账号（`role=MERCHANT`），得到 `userId`
 3. user-service 创建用户成功 → 返回 `userId`
-4. menu-service 使用返回的 `userId` 创建 `merchant` 记录
+4. menu-service 使用返回的 `userId` 创建包含唯一窗口信息的 `merchant` 记录
 5. 若创建用户成功但创建商家失败：返回错误"商家创建失败，请联系管理员"，用户账号保留（手动处理或后续补偿）
 
-**修改商家：** `PUT /api/admin/merchants/{merchantId}`
+**修改商家窗口：** `PUT /api/admin/merchants/{merchantId}`
 
-**窗口管理：** `GET/POST/PUT /api/admin/stalls`
-- 新增窗口：`{ "merchantId": ..., "name": "1号窗口", "category": "盖浇饭" }`
+当前范围不再提供独立窗口 CRUD；`merchant.id` 同时作为窗口标识。
 
 #### 4.5.3 系统配置
 
@@ -1624,7 +1613,7 @@ POST /api/pickup/internal/enqueue-preparing
 ```json
 {
   "orderId": 1234567890,
-  "stallId": 1001,
+  "merchantId": 2000001,
   "acceptTime": "2026-05-14T12:05:00"
 }
 ```
@@ -1639,13 +1628,13 @@ POST /api/pickup/internal/enqueue-preparing
 **连接建立：**
 
 ```
-Client (大屏) → GET ws://host/ws/screen/{stallId} → Gateway → pickup-service
+Client (大屏) → GET ws://host/ws/screen/{merchantId} → Gateway → pickup-service
 ```
 
 **重连策略：**
 
 1. 大屏客户端监听 `onclose` 事件，延迟 2s 后尝试重连
-2. 重连成功→调用 `GET /api/pickup/snapshot/{stallId}` 拉取最新队列快照
+2. 重连成功→调用 `GET /api/pickup/snapshot/{merchantId}` 拉取最新队列快照
 3. 重连失败→指数退避重试（2s, 4s, 8s, 最多 30s）
 4. 大屏在断连期间可定时轮询 HTTP 队列接口作为降级方案
 
@@ -2014,8 +2003,8 @@ flowchart TD
 
 **Redis 缓存数据结构：**
 ```
-queue:preparing:{stallId}  → List<JSON>  按 enter_time ASC
-queue:waiting:{stallId}    → List<JSON>  按 enter_time ASC
+queue:preparing:{merchantId}  → List<JSON>  按 enter_time ASC
+queue:waiting:{merchantId}    → List<JSON>  按 enter_time ASC
 ```
 
 ### 5.10 WebSocket 推送与重连恢复逻辑
@@ -2031,7 +2020,7 @@ sequenceDiagram
     O->>P: Feign: 出餐 / 叫号 / 核销
     P->>P: 处理业务逻辑，更新 MySQL + Redis
     P->>GW: 推送消息（原生 WebSocket）
-    GW->>S: 转发消息到对应 stallId 连接
+    GW->>S: 转发消息到对应 merchantId 连接
     S->>S: 更新队列展示 / 显示叫号弹窗
 
     Note over S,GW: 用户端不连接 WebSocket，每5s轮询 HTTP 获取订单状态
@@ -2043,7 +2032,7 @@ flowchart TD
     A[WebSocket 断连] --> B[监听 onclose 事件]
     B --> C[延迟 2s 尝试重连]
     C --> D{重连成功?}
-    D -- 是 --> E[HTTP GET /api/pickup/snapshot/{stallId}]
+    D -- 是 --> E[HTTP GET /api/pickup/snapshot/{merchantId}]
     E --> F[用快照覆盖当前页面状态]
     F --> G[恢复 WebSocket 监听]
     D -- 否 --> H{重试次数 < 10?}
@@ -2138,7 +2127,7 @@ spring:
         - id: admin-merchants
           uri: lb://menu-service
           predicates:
-            - Path=/api/admin/merchants/**,/api/admin/stalls/**
+            - Path=/api/admin/merchants/**
         - id: admin-orders
           uri: lb://order-service
           predicates:
@@ -2181,7 +2170,7 @@ gateway:
 
 | 路径模式 | 允许角色 | 说明 |
 |---------|---------|------|
-| `/api/admin/**` | `ADMIN` | 所有管理端接口仅管理员（细粒度高阶路由：users→user-service, merchants+stalls→menu-service, orders→order-service, config→order-service） |
+| `/api/admin/**` | `ADMIN` | 所有管理端接口仅管理员（细粒度高阶路由：users→user-service, merchants→menu-service, orders→order-service, config→order-service） |
 | `/api/order/merchant/**` | `MERCHANT` | 商家订单操作仅商家 |
 | `/api/order/create`、`/api/order/{id}/pay`、`/api/order/{id}/cancel`、`/api/order/my` | `USER` | 用户下单支付取消仅普通用户 |
 | `/api/menu/categories`（POST）、`/api/menu/dishes`（POST/PUT/DELETE）、`/api/menu/daily-menus` | `MERCHANT` | 菜品菜单管理仅商家 |
@@ -2301,7 +2290,7 @@ public class UserServiceApplication {
 |------|------|
 | 菜品管理 | 商家对菜品的增删改查（逻辑删除） |
 | 分类管理 | 菜品分类维护 |
-| 每日菜单配置 | 按窗口和售卖时段维护菜单菜品项、每日库存设定和上下架状态 |
+| 每日菜单配置 | 按商家窗口和售卖时段维护菜单菜品项、每日库存设定和上下架状态 |
 | 库存管理 | 库存预占（Feign，Seata AT 分支）、库存恢复、库存预警 |
 | 可售菜品查询 | 供用户端/游客端浏览当前可售菜品（公开接口） |
 | 上下架控制 | 商家对每日菜单菜品项上架/下架 |
@@ -2359,7 +2348,7 @@ WHERE id = #{id} AND remaining_stock >= #{quantity}
 #### 6.3.4 可售菜品查询逻辑
 
 ```
-MenuQueryService.getAvailableMenu(mealPeriod, stallId):
+MenuQueryService.getAvailableMenu(mealPeriod, merchantId):
     now = LocalDateTime.now()
     period = mealPeriod != null ? mealPeriod : getCurrentMealPeriod(now)
     
@@ -2644,28 +2633,28 @@ public class PickupServiceImpl implements PickupService {
     
     @Override
     @Transactional
-    public void enqueuePreparing(Long stallId, Long orderId, String pickupNo) {
+    public void enqueuePreparing(Long merchantId, Long orderId, String pickupNo) {
         // 1. 写入 MySQL
         PreparingQueueItem item = new PreparingQueueItem();
-        item.setStallId(stallId);
+        item.setMerchantId(merchantId);
         item.setOrderId(orderId);
         item.setPickupNo(pickupNo);
         item.setEnterTime(LocalDateTime.now());
         // 计算 position
-        int maxPos = preparingQueueMapper.selectMaxPosition(stallId);
+        int maxPos = preparingQueueMapper.selectMaxPosition(merchantId);
         item.setPosition(maxPos + 1);
         preparingQueueMapper.insert(item);
         
         // 2. 更新 Redis 缓存
-        rebuildPreparingCache(stallId);
+        rebuildPreparingCache(merchantId);
         
         // 3. 推送 WebSocket
-        pushService.pushPreparingUpdate(stallId);
+        pushService.pushPreparingUpdate(merchantId);
     }
     
     @Override
     @Transactional
-    public void moveToWaiting(Long stallId, Long orderId) {
+    public void moveToWaiting(Long merchantId, Long orderId) {
         // 1. 从制作中队列移除
         preparingQueueMapper.delete(
             new LambdaQueryWrapper<PreparingQueueItem>()
@@ -2673,18 +2662,18 @@ public class PickupServiceImpl implements PickupService {
         
         // 2. 插入待取餐队列
         WaitingQueueItem item = new WaitingQueueItem();
-        item.setStallId(stallId);
+        item.setMerchantId(merchantId);
         item.setOrderId(orderId);
         // ... 设置其他字段
         waitingQueueMapper.insert(item);
         
         // 3. 刷新两侧缓存
-        rebuildPreparingCache(stallId);
-        rebuildWaitingCache(stallId);
+        rebuildPreparingCache(merchantId);
+        rebuildWaitingCache(merchantId);
         
         // 4. 推送 WebSocket
-        pushService.pushPreparingUpdate(stallId);
-        pushService.pushWaitingUpdate(stallId);
+        pushService.pushPreparingUpdate(merchantId);
+        pushService.pushWaitingUpdate(merchantId);
     }
 }
 ```
@@ -2697,39 +2686,39 @@ public class PickupServiceImpl implements PickupService {
 @Service
 public class WebSocketPushService {
     
-    // ConcurrentHashMap: stallId → Set&lt;WebSocketSession&gt;
+    // ConcurrentHashMap: merchantId → Set&lt;WebSocketSession&gt;
     private final ConcurrentHashMap<Long, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
     
-    public void pushPreparingUpdate(Long stallId) {
-        List<PreparingQueueItem> queue = getPreparingQueue(stallId);
-        String msg = WebSocketMessage.of("PREPARING_UPDATE", stallId,
+    public void pushPreparingUpdate(Long merchantId) {
+        List<PreparingQueueItem> queue = getPreparingQueue(merchantId);
+        String msg = WebSocketMessage.of("PREPARING_UPDATE", merchantId,
             Map.of("preparingList", queue));
-        sendToStall(stallId, msg);
+        sendToMerchant(merchantId, msg);
     }
     
-    public void pushWaitingUpdate(Long stallId) {
-        List<WaitingQueueItem> queue = getWaitingQueue(stallId);
-        String msg = WebSocketMessage.of("WAITING_UPDATE", stallId,
+    public void pushWaitingUpdate(Long merchantId) {
+        List<WaitingQueueItem> queue = getWaitingQueue(merchantId);
+        String msg = WebSocketMessage.of("WAITING_UPDATE", merchantId,
             Map.of("waitingList", queue));
-        sendToStall(stallId, msg);
+        sendToMerchant(merchantId, msg);
     }
     
-    public void pushCallNotify(Long stallId, Long orderId,
+    public void pushCallNotify(Long merchantId, Long orderId,
                                 String pickupNo, CallType callType) {
         CallNotifyData data = new CallNotifyData(orderId, pickupNo, callType);
-        String msg = WebSocketMessage.of("CALL_NOTIFY", stallId, data);
-        sendToStall(stallId, msg);
+        String msg = WebSocketMessage.of("CALL_NOTIFY", merchantId, data);
+        sendToMerchant(merchantId, msg);
         // 用户端不推送，靠5s轮询获取状态
     }
     
-    private void sendToStall(Long stallId, String message) {
-        Set<WebSocketSession> stallSessions = sessions.get(stallId);
-        if (stallSessions == null) return;
-        for (WebSocketSession session : stallSessions) {
+    private void sendToMerchant(Long merchantId, String message) {
+        Set<WebSocketSession> merchantSessions = sessions.get(merchantId);
+        if (merchantSessions == null) return;
+        for (WebSocketSession session : merchantSessions) {
             try {
                 session.sendMessage(new TextMessage(message));
             } catch (IOException e) {
-                log.warn("WebSocket 推送失败: stallId={}", stallId, e);
+                log.warn("WebSocket 推送失败: merchantId={}", merchantId, e);
             }
         }
     }
@@ -2748,13 +2737,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
     
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new ScreenWebSocketHandler(pushService), "/ws/screen/{stallId}")
+        registry.addHandler(new ScreenWebSocketHandler(pushService), "/ws/screen/{merchantId}")
                 .setAllowedOrigins("*");
     }
 }
 ```
 
-`ScreenWebSocketHandler`：在 `afterConnectionEstablished` 中从路径参数提取 `stallId` 并注册到 `WebSocketPushService.sessions`；在 `afterConnectionClosed` 中移除。收到客户端消息忽略（大屏不发送消息）。
+`ScreenWebSocketHandler`：在 `afterConnectionEstablished` 中从路径参数提取 `merchantId` 并注册到 `WebSocketPushService.sessions`；在 `afterConnectionClosed` 中移除。收到客户端消息忽略（大屏不发送消息）。
 
 ---
 
@@ -2920,7 +2909,7 @@ public class LoginUser {
 
 - 新订单到达时顶部通知栏提醒 + 声音提示
 - 制作中订单按等待时间颜色分级（< 5min 绿, 5-10min 黄, > 10min 红）
-- 窗口选择器（多窗口商家可切换）
+- 当前商家窗口信息区
 
 **扫码核销交互：**
 - 点击"扫码核销"→调用浏览器摄像头 API（`getUserMedia`）
@@ -2931,7 +2920,7 @@ public class LoginUser {
 
 #### 7.2.3 每日菜单配置
 
-- 顶部：窗口选择器 + 售卖时段下拉
+- 顶部：商家窗口信息 + 售卖时段下拉
 - 左侧：菜品库（可搜索/按分类筛选），拖拽或点击添加到右侧
 - 右侧：已选菜品列表，每项设置：每日库存数量、预警阈值、上架开关
 - 底部：保存每日菜单配置按钮
@@ -2945,8 +2934,7 @@ public class LoginUser {
 | 登录页 | `/login` | 管理员登录 |
 | 仪表盘 | `/dashboard` | 系统运行概览 |
 | 用户管理 | `/users` | 用户列表、搜索、启用/禁用、重置密码 |
-| 商家管理 | `/merchants` | 商家 CRUD，关联窗口管理 |
-| 窗口管理 | `/stalls` | 窗口 CRUD，关联商家 |
+| 商家窗口管理 | `/merchants` | 商家窗口 CRUD |
 | 系统配置 | `/config` | 超时时间、取餐号重置规则等配置修改 |
 | 操作日志 | `/logs` | 操作日志查看和搜索 |
 
@@ -2962,7 +2950,7 @@ public class LoginUser {
 
 #### 7.4.1 页面布局
 
-大屏为固定窗口展示，URL 携带窗口 ID：`/screen/:stallId`
+大屏为固定商家窗口展示，URL 携带商家 ID：`/screen/:merchantId`
 
 **布局：**
 
@@ -3044,7 +3032,6 @@ const routes = [
   { path: '/dashboard', component: Dashboard, meta: { auth: true, role: 'ADMIN' } },
   { path: '/users', component: UserManage, meta: { auth: true, role: 'ADMIN' } },
   { path: '/merchants', component: MerchantManage, meta: { auth: true, role: 'ADMIN' } },
-  { path: '/stalls', component: StallManage, meta: { auth: true, role: 'ADMIN' } },
   { path: '/config', component: SystemConfig, meta: { auth: true, role: 'ADMIN' } },
   { path: '/logs', component: OperationLogs, meta: { auth: true, role: 'ADMIN' } },
   { path: '/', redirect: '/dashboard' }
@@ -3055,7 +3042,7 @@ const routes = [
 
 ```javascript
 const routes = [
-  { path: '/screen/:stallId', component: ScreenView }
+  { path: '/screen/:merchantId', component: ScreenView }
 ]
 ```
 
@@ -3097,7 +3084,7 @@ router.beforeEach((to, from, next) => {
 | 每日菜单 | `dailyStock` | 必填，整数，≥ 0 |
 | 每日菜单 | `alertThreshold` | 必填，整数，≥ 0 |
 | 下单 | `items` | 必填，非空数组；每个 item 的 quantity ≥ 1 |
-| 下单 | `stallId` | 必填 |
+| 下单 | `merchantId` | 必填 |
 | 支付 | `payPassword` | 必填，≥ 6 位 |
 | 取消订单 | `reason` | 选填，≤ 200 字 |
 
@@ -3124,8 +3111,8 @@ router.beforeEach((to, from, next) => {
 #### 7.8.1 大屏端 WebSocket（原生 API）
 
 **连接流程：**
-1. 大屏页面加载后，建立到 `ws://{host}/ws/screen/{stallId}` 的原生 WebSocket 连接
-2. `onopen`：立即调用 `GET /api/pickup/snapshot/{stallId}` 拉取最新队列快照恢复界面
+1. 大屏页面加载后，建立到 `ws://{host}/ws/screen/{merchantId}` 的原生 WebSocket 连接
+2. `onopen`：立即调用 `GET /api/pickup/snapshot/{merchantId}` 拉取最新队列快照恢复界面
 3. `onmessage`：根据 `type` 字段（`PREPARING_UPDATE` / `WAITING_UPDATE` / `CALL_NOTIFY`）更新对应队列区域；`CALL_NOTIFY` 触发 2 秒自动消失的叫号弹窗
 4. `onclose` / `onerror`：延迟重连，指数退避（2s→4s→8s→...→30s 上限，最多 10 次）
 5. 超过最大重试次数后降级为 HTTP 轮询（每 10s 调用快照接口）
@@ -3176,7 +3163,7 @@ public Result<?> handleValidation(MethodArgumentNotValidException e) {
 **业务服务端二次校验模式：**
 ```java
 // 商家操作订单前校验
-if (!order.getStallId().equals(currentUser.getStallId())) {
+if (!order.getMerchantId().equals(currentMerchant.getId())) {
     throw new ForbiddenException("无权限操作此订单");
 }
 ```
@@ -3497,7 +3484,6 @@ public class Order {
     private String orderNo;
     private Long userId;
     private Long merchantId;
-    private Long stallId;
     private BigDecimal totalAmount;
     private String status;             // PENDING_PAY / PAID / ...
     private String pickupNo;
@@ -3521,8 +3507,8 @@ public class Order {
 ```java
 @Data
 public class CreateOrderReq {
-    @NotNull(message = "窗口ID不能为空")
-    private Long stallId;
+    @NotNull(message = "商家窗口ID不能为空")
+    private Long merchantId;
     
     @NotEmpty(message = "菜品不能为空")
     @Valid
@@ -3691,11 +3677,10 @@ export default {
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
-| `merchant` | 商家 | id, user_id, name, contact_name, contact_phone, status, create_time |
-| `stall` | 窗口 | id, merchant_id, name, category, status, create_time |
+| `merchant` | 商家窗口 | id, user_id, name, contact_name, contact_phone, category, status, create_time |
 | `dish_category` | 菜品分类 | id, merchant_id, name, sort, create_time |
 | `dish` | 菜品 | id, merchant_id, category_id, name, image(MEDIUMBLOB), price, description, status, create_time |
-| `daily_menu` | 每日菜单配置 | id, stall_id, meal_period, status, create_time, update_time |
+| `daily_menu` | 每日菜单配置 | id, merchant_id, meal_period, status, create_time, update_time |
 | `daily_menu_item` | 菜单菜品项 | id, daily_menu_id, dish_id, daily_stock, total_stock, remaining_stock, reserved_stock, alert_threshold, is_listed, last_reset_date, create_time, update_time |
 | `inventory_log` | 库存变更日志 | id, daily_menu_item_id, change_type, change_amount, before_remaining, after_remaining, order_id, create_time |
 
@@ -3703,7 +3688,7 @@ export default {
 
 | 表名 | 说明 | 核心字段 |
 |------|------|---------|
-| `order` | 订单主表 | id, order_no(UNIQUE), user_id, merchant_id, stall_id, total_amount, status, pickup_no, pickup_qrcode_id, remark, cancel_reason, pay_time, accept_time, complete_time, cancel_time, create_time, update_time |
+| `order` | 订单主表 | id, order_no(UNIQUE), user_id, merchant_id, total_amount, status, pickup_no, pickup_qrcode_id, remark, cancel_reason, pay_time, accept_time, complete_time, cancel_time, create_time, update_time |
 | `order_item` | 订单明细 | id, order_id, dish_id, dish_name, dish_image, unit_price, quantity, subtotal |
 | `order_status_log` | 状态变更日志 | id, order_id, from_status, to_status, operator_id, operator_role, remark, create_time |
 
@@ -3714,10 +3699,10 @@ export default {
 | `pickup_number_sequence` | 取餐号全局序列 | id(固定1), current_letter, current_number, reset_rule, last_reset_time |
 | `pickup_qrcode` | 取餐二维码 | id, order_id(UNIQUE), qrcode_content, pickup_code(UNIQUE), is_verified, verify_time, create_time |
 **各服务 config 表（每服务独立，不跨库访问，同结构）：** canteen_order.config（订单超时等）、canteen_menu.config（库存预警间隔等）、canteen_pickup.config（取餐号重置规则等）。字段：id, config_key(UNIQUE), config_value, config_type, description, update_time, updated_by |
-| `preparing_queue_item` | 制作中队列 | id, stall_id, order_id(UNIQUE), pickup_no, enter_time, position |
-| `waiting_queue_item` | 待取餐队列 | id, stall_id, order_id(UNIQUE), pickup_no, enter_time, position |
-| `call_event` | 叫号事件 | id, stall_id, order_id, pickup_no, call_type, call_time |
-| `verify_record` | 核销记录 | id, order_id, qrcode_id, stall_id, verify_type, operator_id, verify_time |
+| `preparing_queue_item` | 制作中队列 | id, merchant_id, order_id(UNIQUE), pickup_no, enter_time, position |
+| `waiting_queue_item` | 待取餐队列 | id, merchant_id, order_id(UNIQUE), pickup_no, enter_time, position |
+| `call_event` | 叫号事件 | id, merchant_id, order_id, pickup_no, call_type, call_time |
+| `verify_record` | 核销记录 | id, order_id, qrcode_id, merchant_id, verify_type, operator_id, verify_time |
 
 ### 10.4 接口清单
 
@@ -3755,13 +3740,13 @@ export default {
 | 30 | order | POST | `/api/order/{id}/reject` | MERCHANT | 拒绝接单 |
 | 31 | order | POST | `/api/order/{id}/dispatch` | MERCHANT | 出餐 |
 | 32 | order | GET | `/api/order/merchant/list` | MERCHANT | 商家订单列表 |
-| 33 | pickup | GET | `/api/pickup/preparing/{stallId}` | 公开 | 制作中队列 |
-| 34 | pickup | GET | `/api/pickup/waiting/{stallId}` | 公开 | 待取餐队列 |
+| 33 | pickup | GET | `/api/pickup/preparing/{merchantId}` | 公开 | 制作中队列 |
+| 34 | pickup | GET | `/api/pickup/waiting/{merchantId}` | 公开 | 待取餐队列 |
 | 35 | pickup | GET | `/api/pickup/my-position/{orderId}` | USER | 我的排队位置 |
 | 36 | pickup | GET | `/api/pickup/qrcode/{orderId}` | USER | 查看取餐二维码 |
 | 37 | pickup | POST | `/api/pickup/call` | MERCHANT | 手动叫号 |
 | 38 | pickup | POST | `/api/pickup/verify` | MERCHANT | 核销取餐 |
-| 39 | pickup | GET | `/api/pickup/snapshot/{stallId}` | 公开 | 大屏队列快照 |
+| 39 | pickup | GET | `/api/pickup/snapshot/{merchantId}` | 公开 | 大屏队列快照 |
 | 40 | admin | GET | `/api/admin/users` | ADMIN | 用户管理列表 |
 | 41 | admin | GET | `/api/admin/users/{id}` | ADMIN | 用户详情 |
 | 42 | admin | PUT | `/api/admin/users/{id}/status` | ADMIN | 修改用户状态 |
@@ -3769,7 +3754,6 @@ export default {
 | 44 | admin | GET | `/api/admin/merchants` | ADMIN | 商家列表 |
 | 45 | admin | POST | `/api/admin/merchants` | ADMIN | 新增商家 |
 | 46 | admin | PUT | `/api/admin/merchants/{id}` | ADMIN | 修改商家 |
-| 47 | admin | GET/POST/PUT | `/api/admin/stalls` | ADMIN | 窗口管理 |
 | 48 | admin | GET | `/api/admin/config` | ADMIN | 查询配置 |
 | 49 | admin | PUT | `/api/admin/config` | ADMIN | 修改配置 |
 | 50 | admin | GET | `/api/admin/orders/abnormal` | ADMIN | 异常订单列表 |
@@ -3813,10 +3797,9 @@ export default {
 | 18 | 管理员 Web 端 | 仪表盘 | `/dashboard` |
 | 19 | 管理员 Web 端 | 用户管理 | `/users` |
 | 20 | 管理员 Web 端 | 商家管理 | `/merchants` |
-| 21 | 管理员 Web 端 | 窗口管理 | `/stalls` |
 | 22 | 管理员 Web 端 | 系统配置 | `/config` |
 | 23 | 管理员 Web 端 | 操作日志 | `/logs` |
-| 24 | 电视大屏端 | 大屏展示 | `/screen/:stallId` |
+| 24 | 电视大屏端 | 大屏展示 | `/screen/:merchantId` |
 
 ---
 

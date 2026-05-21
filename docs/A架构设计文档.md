@@ -233,7 +233,7 @@ graph TD
 |---------|---------|------|-----------|---------|
 | 网关服务 | gateway-service | 9000 | - | 路由转发、JWT 校验、IP/用户级限流、WebSocket 代理 |
 | 用户服务 | user-service | 9001 | canteen_user | 注册登录、JWT 签发/刷新、用户信息维护、支付密码验证 |
-| 菜品菜单服务 | menu-service | 9002 | canteen_menu | 菜品 CRUD、每日菜单发布、库存预占/恢复、上下架、库存预警 |
+| 菜品菜单服务 | menu-service | 9002 | canteen_menu | 菜品 CRUD、每日菜单配置、每日库存自动重置、库存预占/恢复、上下架、库存预警 |
 | 订单服务 | order-service | 9003 | canteen_order | 下单、支付验证、状态流转（6 状态）、超时取消（RocketMQ） |
 | 取餐排队服务 | pickup-service | 9004 | canteen_pickup | 取餐号全局序列、制作中队列、待取餐队列、叫号（自动+手动）、核销、WebSocket 消息生产 |
 

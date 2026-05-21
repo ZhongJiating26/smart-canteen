@@ -8,11 +8,11 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/user/**
+            - Path=/api/user/**,/api/admin/users/**
         - id: menu-service
           uri: lb://menu-service
           predicates:
-            - Path=/api/menu/**
+            - Path=/api/menu/**,/api/admin/merchants/**,/api/admin/menu/config/**
         - id: order-service
           uri: lb://order-service
           predicates:
@@ -20,7 +20,7 @@ spring:
         - id: pickup-service
           uri: lb://pickup-service
           predicates:
-            - Path=/api/pickup/**,/ws/**
+            - Path=/api/pickup/**,/api/admin/pickup/config/**,/ws/**
 
 management:
   endpoints:

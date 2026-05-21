@@ -2,6 +2,7 @@ package cn.zhongjiating.canteen.common.enums;
 
 public enum InventoryChangeType {
 
+    RESET("每日库存重置"),
     RESERVE("预占库存"),
     RELEASE("释放恢复库存"),
     CONSUME("核销确认扣减");

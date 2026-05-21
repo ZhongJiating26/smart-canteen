@@ -7,10 +7,12 @@ import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.common.exception.ForbiddenException;
 import cn.zhongjiating.canteen.user.dto.AdminResetPasswordRequest;
 import cn.zhongjiating.canteen.user.dto.AdminUserStatusRequest;
+import cn.zhongjiating.canteen.user.dto.CreateMerchantAccountRequest;
 import cn.zhongjiating.canteen.user.entity.User;
 import cn.zhongjiating.canteen.user.mapper.UserMapper;
 import cn.zhongjiating.canteen.user.service.AdminUserService;
 import cn.zhongjiating.canteen.user.vo.UserInfoVO;
+import cn.zhongjiating.canteen.user.vo.MerchantAccountVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,11 +90,35 @@ public class AdminUserServiceImpl implements AdminUserService {
         userMapper.updateById(user);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MerchantAccountVO createMerchantAccount(CreateMerchantAccountRequest request) {
+        String phone = request.phone().trim();
+        if (userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, phone)) != null
+                || userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getPhone, phone)) != null) {
+            throw new BusinessException(ErrorCode.USER_EXISTS, "商家登录手机号已存在");
+        }
+        User user = new User();
+        user.setUsername(phone);
+        user.setPhone(phone);
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPayPassword("123456");
+        user.setNickname(normalizeNickname(request.nickname(), phone));
+        user.setRole(RoleEnum.MERCHANT.getCode());
+        user.setStatus(1);
+        userMapper.insert(user);
+        return MerchantAccountVO.from(user);
+    }
+
     private User requireUser(Long userId) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
         }
         return user;
+    }
+
+    private String normalizeNickname(String nickname, String username) {
+        return nickname == null || nickname.isBlank() ? username : nickname.trim();
     }
 }

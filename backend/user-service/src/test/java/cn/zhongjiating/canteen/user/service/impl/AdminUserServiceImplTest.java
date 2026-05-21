@@ -3,6 +3,7 @@ package cn.zhongjiating.canteen.user.service.impl;
 import cn.zhongjiating.canteen.common.exception.ForbiddenException;
 import cn.zhongjiating.canteen.user.dto.AdminResetPasswordRequest;
 import cn.zhongjiating.canteen.user.dto.AdminUserStatusRequest;
+import cn.zhongjiating.canteen.user.dto.CreateMerchantAccountRequest;
 import cn.zhongjiating.canteen.user.entity.User;
 import cn.zhongjiating.canteen.user.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class AdminUserServiceImplTest {
@@ -47,6 +49,22 @@ class AdminUserServiceImplTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userMapper).updateById(userCaptor.capture());
         assertThat(userCaptor.getValue().getPasswordHash()).isEqualTo("encoded");
+    }
+
+    @Test
+    void createMerchantAccountUsesPhoneAsUsername() {
+        AdminUserServiceImpl service = new AdminUserServiceImpl(userMapper, passwordEncoder);
+        when(userMapper.selectOne(any())).thenReturn(null);
+        when(passwordEncoder.encode("123456")).thenReturn("encoded");
+
+        service.createMerchantAccount(new CreateMerchantAccountRequest("13800138004", "123456", "二号窗口"));
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userMapper).insert(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("13800138004");
+        assertThat(userCaptor.getValue().getPhone()).isEqualTo("13800138004");
+        assertThat(userCaptor.getValue().getRole()).isEqualTo("MERCHANT");
+        assertThat(userCaptor.getValue().getPayPassword()).isEqualTo("123456");
     }
 
     private User user(Long userId) {

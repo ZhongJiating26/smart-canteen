@@ -13,28 +13,15 @@ CREATE TABLE IF NOT EXISTS `merchant` (
     `name` VARCHAR(100) NOT NULL COMMENT '商家名称',
     `contact_name` VARCHAR(50) DEFAULT NULL COMMENT '负责人姓名',
     `contact_phone` VARCHAR(11) DEFAULT NULL COMMENT '联系电话',
+    `category` VARCHAR(50) DEFAULT NULL COMMENT '经营类型/窗口分类',
     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_user_id` (`user_id`),
+    UNIQUE KEY `uk_user_id` (`user_id`),
     KEY `idx_status` (`status`),
     CONSTRAINT `ck_merchant_status` CHECK (`status` IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='商家表';
-
-CREATE TABLE IF NOT EXISTS `stall` (
-    `id` BIGINT NOT NULL COMMENT '主键，即窗口编号',
-    `merchant_id` BIGINT NOT NULL COMMENT '所属商家 ID',
-    `name` VARCHAR(100) NOT NULL COMMENT '窗口名称',
-    `floor` VARCHAR(20) DEFAULT NULL COMMENT '所在楼层',
-    `category` VARCHAR(50) DEFAULT NULL COMMENT '窗口类型/分类',
-    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
-    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_merchant_id` (`merchant_id`),
-    KEY `idx_status` (`status`),
-    CONSTRAINT `ck_stall_status` CHECK (`status` IN (0, 1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='窗口表';
 
 CREATE TABLE IF NOT EXISTS `dish_category` (
     `id` BIGINT NOT NULL COMMENT '主键',
@@ -68,44 +55,44 @@ CREATE TABLE IF NOT EXISTS `dish` (
 
 CREATE TABLE IF NOT EXISTS `daily_menu` (
     `id` BIGINT NOT NULL COMMENT '主键',
-    `stall_id` BIGINT NOT NULL COMMENT '所属窗口 ID',
-    `menu_date` DATE NOT NULL COMMENT '菜单日期',
+    `merchant_id` BIGINT NOT NULL COMMENT '所属商家 ID，当前商家即窗口',
     `meal_period` VARCHAR(20) NOT NULL COMMENT 'BREAKFAST/LUNCH/DINNER/SNACK',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '1=已发布, 0=草稿',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_stall_date_period` (`stall_id`, `menu_date`, `meal_period`),
-    KEY `idx_menu_date` (`menu_date`),
+    UNIQUE KEY `uk_merchant_period` (`merchant_id`, `meal_period`),
     CONSTRAINT `ck_daily_menu_meal_period` CHECK (`meal_period` IN ('BREAKFAST', 'LUNCH', 'DINNER', 'SNACK')),
     CONSTRAINT `ck_daily_menu_status` CHECK (`status` IN (0, 1))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='每日菜单表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='每日菜单配置表';
 
 CREATE TABLE IF NOT EXISTS `daily_menu_item` (
     `id` BIGINT NOT NULL COMMENT '主键',
     `daily_menu_id` BIGINT NOT NULL COMMENT '关联每日菜单 ID',
     `dish_id` BIGINT NOT NULL COMMENT '关联菜品 ID',
-    `total_stock` INT NOT NULL DEFAULT 0 COMMENT '总库存',
-    `remaining_stock` INT NOT NULL DEFAULT 0 COMMENT '剩余库存',
-    `reserved_stock` INT NOT NULL DEFAULT 0 COMMENT '预占库存',
+    `daily_stock` INT NOT NULL DEFAULT 0 COMMENT '每日自动重置库存数量',
+    `total_stock` INT NOT NULL DEFAULT 0 COMMENT '当天总库存',
+    `remaining_stock` INT NOT NULL DEFAULT 0 COMMENT '当天剩余库存',
+    `reserved_stock` INT NOT NULL DEFAULT 0 COMMENT '当天预占库存',
     `alert_threshold` INT NOT NULL DEFAULT 0 COMMENT '库存预警阈值',
     `is_listed` TINYINT NOT NULL DEFAULT 1 COMMENT '1=上架, 0=下架',
-    `price_override` DECIMAL(10, 2) DEFAULT NULL COMMENT '覆盖价格',
+    `last_reset_date` DATE DEFAULT NULL COMMENT '最近一次库存重置日期',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_menu_dish` (`daily_menu_id`, `dish_id`),
     KEY `idx_menu_id` (`daily_menu_id`),
     KEY `idx_dish_id` (`dish_id`),
     KEY `idx_is_listed` (`is_listed`),
-    CONSTRAINT `ck_daily_menu_item_stock` CHECK (`total_stock` >= 0 AND `remaining_stock` >= 0 AND `reserved_stock` >= 0),
+    CONSTRAINT `ck_daily_menu_item_stock` CHECK (`daily_stock` >= 0 AND `total_stock` >= 0 AND `remaining_stock` >= 0 AND `reserved_stock` >= 0),
     CONSTRAINT `ck_daily_menu_item_alert` CHECK (`alert_threshold` >= 0),
-    CONSTRAINT `ck_daily_menu_item_listed` CHECK (`is_listed` IN (0, 1)),
-    CONSTRAINT `ck_daily_menu_item_price_override` CHECK (`price_override` IS NULL OR `price_override` >= 0)
+    CONSTRAINT `ck_daily_menu_item_listed` CHECK (`is_listed` IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='每日菜单菜品项';
 
 CREATE TABLE IF NOT EXISTS `inventory_log` (
     `id` BIGINT NOT NULL COMMENT '主键',
     `daily_menu_item_id` BIGINT NOT NULL COMMENT '关联每日菜单菜品项 ID',
-    `change_type` VARCHAR(20) NOT NULL COMMENT 'RESERVE/RELEASE/CONSUME',
+    `change_type` VARCHAR(20) NOT NULL COMMENT 'RESET/RESERVE/RELEASE/CONSUME',
     `change_amount` INT NOT NULL COMMENT '变更数量，正=增加，负=减少',
     `before_remaining` INT NOT NULL COMMENT '变更前剩余库存',
     `after_remaining` INT NOT NULL COMMENT '变更后剩余库存',
@@ -115,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `inventory_log` (
     KEY `idx_daily_menu_item_id` (`daily_menu_item_id`),
     KEY `idx_order_id` (`order_id`),
     KEY `idx_create_time` (`create_time`),
-    CONSTRAINT `ck_inventory_log_type` CHECK (`change_type` IN ('RESERVE', 'RELEASE', 'CONSUME')),
+    CONSTRAINT `ck_inventory_log_type` CHECK (`change_type` IN ('RESET', 'RESERVE', 'RELEASE', 'CONSUME')),
     CONSTRAINT `ck_inventory_log_remaining` CHECK (`before_remaining` >= 0 AND `after_remaining` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存变更日志表';
 
