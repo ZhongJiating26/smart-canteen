@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Eats</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Center wrapper simulating a mobile phone viewport -->
+    <div class="phone-shell">
+      
+      <!-- ================= LOGIN SCREEN ================= -->
+      <div id="login-view" class="mobile-screen state-center">
+        <!-- Top Navigation -->
+        <header class="screen-header">
+          <span class="brand-title">Campus Eats</span>
+        </header>
+
+        <div class="screen-content">
+          <!-- Sign In Card -->
+          <div class="form-card">
+            <h1 class="card-title">Sign In</h1>
+            <p class="card-subtitle">Access your meal plans and orders</p>
+
+            <!-- Login Method Tabs -->
+            <div class="tab-bar">
+              <div class="tab-item active" id="tab-password">Password</div>
+              <div class="tab-item" id="tab-code">Code</div>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="login-form" onsubmit="return false;">
+              
+              <!-- Account Field -->
+              <md-outlined-text-field id="login-account" label="Account (Phone/ID)" required>
+                <span slot="trailing-icon" class="material-symbols-outlined">account_circle</span>
+              </md-outlined-text-field>
+
+              <!-- Password Field (Visible by default) -->
+              <md-outlined-text-field id="login-password" type="password" label="Password" required>
+                <span slot="trailing-icon" class="material-symbols-outlined eye-toggle" id="login-pwd-toggle">visibility</span>
+              </md-outlined-text-field>
+
+              <!-- Code Login Field (Hidden by default) -->
+              <div class="verification-row hidden" id="login-code-wrapper">
+                <md-outlined-text-field id="login-code" label="Verification Code" class="flex-grow">
+                  <span slot="leading-icon" class="material-symbols-outlined">gpp_good</span>
+                </md-outlined-text-field>
+                <button type="button" class="btn-send-code" id="btn-login-send-code">Send Code</button>
+              </div>
+
+              <!-- Action Button -->
+              <button type="submit" class="btn-primary" id="btn-login-submit">Login</button>
+            </form>
+
+            <!-- Footer links -->
+            <div class="form-links">
+              <a href="#" class="link-item" id="btn-forgot-pwd">Forgot Password?</a>
+              <span class="link-text">
+                New user? <a href="#" class="link-item bold" id="go-to-register">Register</a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Copyright Footer -->
+        <footer class="screen-footer">
+          <p>© 2024 Campus Eats Ecosystem. All rights reserved.</p>
+        </footer>
+      </div>
+
+      <!-- ================= REGISTER SCREEN ================= -->
+      <div id="register-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-between">
+          <span class="material-symbols-outlined header-icon clickable" id="go-to-login">arrow_back</span>
+          <span class="screen-title">Register</span>
+          <div style="width: 36px;"></div>
+        </header>
+
+        <div class="screen-content scrollable">
+          <!-- Title Banner -->
+          <div class="register-banner">
+            <p class="register-subtitle">Create an account to start your campus culinary journey.</p>
+          </div>
+
+          <!-- Registration Card -->
+          <div class="form-card py-24">
+            <form class="auth-form" id="register-form" onsubmit="return false;">
+              
+              <!-- Subsection: IDENTIFICATION -->
+              <div class="form-section">
+                <h3 class="section-header">IDENTIFICATION</h3>
+                
+                <md-outlined-text-field id="reg-phone" label="Phone Number *" placeholder="e.g. 13800000000" type="tel" required>
+                  <span slot="leading-icon" class="material-symbols-outlined">phone</span>
+                </md-outlined-text-field>
+
+                <div class="verification-row">
+                  <md-outlined-text-field id="reg-code" label="Verification Code *" placeholder="6-digit code" required class="flex-grow">
+                    <span slot="leading-icon" class="material-symbols-outlined">gpp_good</span>
+                  </md-outlined-text-field>
+                  <button type="button" class="btn-send-code inline-btn" id="btn-reg-send-code">Send Code</button>
+                </div>
+
+                <md-outlined-text-field id="reg-student-id" label="Student/Staff ID (Optional)" placeholder="e.g. 20230001">
+                  <span slot="leading-icon" class="material-symbols-outlined">badge</span>
+                </md-outlined-text-field>
+              </div>
+ 
+              <!-- Subsection: PROFILE -->
+              <div class="form-section">
+                <h3 class="section-header">PROFILE</h3>
+                
+                <md-outlined-text-field id="reg-nickname" label="Nickname (Optional)" placeholder="What should we call you?">
+                  <span slot="leading-icon" class="material-symbols-outlined">mood</span>
+                </md-outlined-text-field>
+              </div>
+ 
+              <!-- Subsection: SECURITY -->
+              <div class="form-section">
+                <h3 class="section-header">SECURITY</h3>
+                
+                <md-outlined-text-field id="reg-password" type="password" label="Password *" placeholder="Min. 8 characters" required>
+                  <span slot="leading-icon" class="material-symbols-outlined">lock</span>
+                  <span slot="trailing-icon" class="material-symbols-outlined eye-toggle" id="reg-pwd-toggle">visibility</span>
+                </md-outlined-text-field>
+
+                <md-outlined-text-field id="reg-confirm-password" type="password" label="Confirm Password *" placeholder="Repeat your password" required>
+                  <span slot="leading-icon" class="material-symbols-outlined">lock</span>
+                  <span slot="trailing-icon" class="material-symbols-outlined eye-toggle" id="reg-confirm-pwd-toggle">visibility</span>
+                </md-outlined-text-field>
+              </div>
+ 
+              <!-- Submit Action -->
+              <button type="submit" class="btn-primary mt-12" id="btn-register-submit">Register</button>
+            </form>
+
+            <!-- Agreement Details -->
+            <p class="agreement-text">
+              By clicking Register, you agree to our <a href="#" class="accent-link">Terms</a> and <a href="#" class="accent-link">Privacy Policy</a>.
+            </p>
+          </div>
+
+          <!-- Redirect back to login -->
+          <div class="redirect-login">
+            <span>Already have an account? <a href="#" class="accent-link bold" id="reg-go-to-login">Log in</a></span>
+          </div>
+
+          <!-- Bottom Visual Icon Badges -->
+          <div class="bottom-food-icons">
+            <div class="food-badge-item">
+              <span class="material-symbols-outlined badge-icon">restaurant</span>
+            </div>
+            <div class="food-badge-item">
+              <span class="material-symbols-outlined badge-icon">local_cafe</span>
+            </div>
+            <div class="food-badge-item">
+              <span class="material-symbols-outlined badge-icon">lunch_dining</span>
+            </div>
+            <div class="food-badge-item">
+              <span class="material-symbols-outlined badge-icon">local_pizza</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CANTEEN MENU/STALLS SCREEN ================= -->
+      <div id="menu-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header">
+          <span class="brand-title">Campus Eats</span>
+        </header>
+
+        <div class="screen-content scrollable menu-content">
+          <!-- Promo Banner Card -->
+          <div class="promo-banner">
+            <h2 class="promo-title">Hungry, Alex?</h2>
+            <p class="promo-desc">Find your favorite campus stall and skip the queue.</p>
+            <div class="promo-chips">
+              <span class="promo-chip">
+                <span class="material-symbols-outlined icon-small">local_fire_department</span>
+                Popular Now
+              </span>
+              <span class="promo-chip">
+                <span class="material-symbols-outlined icon-small">schedule</span>
+                Fast Pickup
+              </span>
+            </div>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="search-container">
+            <md-outlined-text-field id="stall-search" placeholder="Search for stalls or dishes">
+              <span slot="leading-icon" class="material-symbols-outlined">search</span>
+              <span slot="trailing-icon" class="material-symbols-outlined filter-icon">tune</span>
+            </md-outlined-text-field>
+          </div>
+
+          <!-- Stall Category Chips -->
+          <div class="category-scroll-container">
+            <div class="category-chips-row">
+              <div class="chip active" data-category="all">
+                <span class="material-symbols-outlined chip-icon">grid_view</span>
+                All Stalls
+              </div>
+              <div class="chip" data-category="noodles">
+                <span class="material-symbols-outlined chip-icon">ramen_dining</span>
+                Noodles
+              </div>
+              <div class="chip" data-category="western">
+                <span class="material-symbols-outlined chip-icon">lunch_dining</span>
+                Western
+              </div>
+              <div class="chip" data-category="healthy">
+                <span class="material-symbols-outlined chip-icon">eco</span>
+                Healthy
+              </div>
+              <div class="chip" data-category="rice">
+                <span class="material-symbols-outlined chip-icon">rice_bowl</span>
+                Rice Bowls
+              </div>
+              <div class="chip" data-category="drinks">
+                <span class="material-symbols-outlined chip-icon">local_cafe</span>
+                Drinks
+              </div>
+              <div class="chip" data-category="desserts">
+                <span class="material-symbols-outlined chip-icon">cookie</span>
+                Desserts
+              </div>
+            </div>
+          </div>
+
+          <!-- Stall List -->
+          <div class="stall-list" id="stall-list">
+            <!-- Stall 1: Noodle House -->
+            <div class="stall-card clickable-stall" data-category="noodles" data-stall="noodle-house">
+              <img class="stall-img" src="/images/sour_beef.png" alt="Noodle House" />
+              <div class="stall-info">
+                <h4 class="stall-title">Noodle House</h4>
+                <p class="stall-cuisine">Asian Cuisine</p>
+              </div>
+              <div class="stall-status-col">
+                <span class="stall-sales-tag">920+ Sales</span>
+                <span class="stall-queue-tag">20单 制作中</span>
+              </div>
+            </div>
+
+            <!-- Stall 2: Western Grill -->
+            <div class="stall-card clickable-stall" data-category="western" data-stall="western-grill">
+              <img class="stall-img" src="/images/chicken_meal.png" alt="Western Grill" />
+              <div class="stall-info">
+                <h4 class="stall-title">Western Grill</h4>
+                <p class="stall-cuisine">Gourmet Burgers</p>
+              </div>
+              <div class="stall-status-col">
+                <span class="stall-sales-tag">450+ Sales</span>
+                <span class="stall-queue-tag">8单 制作中</span>
+              </div>
+            </div>
+
+            <!-- Stall 3: Healthy Bowls -->
+            <div class="stall-card clickable-stall" data-category="healthy" data-stall="salad-drinks">
+              <img class="stall-img" src="/images/tofu_broccoli.png" alt="Healthy Bowls" />
+              <div class="stall-info">
+                <h4 class="stall-title">Healthy Bowls</h4>
+                <p class="stall-cuisine">Salads & Drinks</p>
+              </div>
+              <div class="stall-status-col">
+                <span class="stall-sales-tag">680+ Sales</span>
+                <span class="stall-queue-tag">5单 制作中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <div class="bottom-nav">
+          <div class="nav-tab active" id="tab-menu" data-tab="menu">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">restaurant</span>
+            </div>
+            <span class="nav-label">Menu</span>
+          </div>
+          <div class="nav-tab" id="tab-orders" data-tab="orders">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">receipt</span>
+            </div>
+            <span class="nav-label">Orders</span>
+          </div>
+          <div class="nav-tab" id="tab-profile" data-tab="profile">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <span class="nav-label">Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= DISHES MENU DETAIL SCREEN ================= -->
+      <div id="dishes-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-between">
+          <span class="material-symbols-outlined header-icon clickable" id="dishes-back">arrow_back</span>
+          <span class="screen-title" id="dishes-stall-title">Stall Menu</span>
+          <div style="width: 36px;"></div> <!-- placeholder to center title -->
+        </header>
+
+        <!-- Scrollable Dish List -->
+        <div class="screen-content scrollable menu-content" style="padding-bottom: 160px;">
+          <!-- Hero Banner -->
+          <div class="stall-hero-banner">
+            <img id="dishes-hero-img" src="/images/noodle_house_hero.png" alt="Stall Banner" />
+            <span class="hero-cuisine-tag" id="dishes-cuisine-tag">Asian Fusion</span>
+          </div>
+
+          <!-- Open Hours -->
+          <div class="stall-hours" id="dishes-hours-label">Open until 9:00 PM</div>
+
+          <!-- Menu Category Scroll Chips -->
+          <div class="dish-category-row-container">
+            <div class="dish-category-row" id="dish-category-row">
+              <button type="button" class="dish-chip active" data-category="main">Main Dishes</button>
+              <button type="button" class="dish-chip" data-category="sides">Sides</button>
+              <button type="button" class="dish-chip" data-category="drinks">Drinks</button>
+              <button type="button" class="dish-chip" data-category="combos">Combos</button>
+            </div>
+          </div>
+
+          <!-- Dishes Cards -->
+          <div class="food-list" id="food-list">
+            <!-- Noodle House Dishes -->
+            <div class="food-card" data-stall="noodle-house" data-category="main">
+              <img class="food-img" src="/images/tonkotsu_ramen.png" alt="Tonkotsu Ramen" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Tonkotsu Ramen</h4>
+                  <span class="food-price">$12.50</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Rich pork bone broth, chashu pork slices, bamboo shoots, soft-boiled egg, and green onions.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="tonkotsu_ramen" data-price="12.50" data-name="Tonkotsu Ramen">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="tonkotsu_ramen">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="tonkotsu_ramen">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="tonkotsu_ramen">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="noodle-house" data-category="main">
+              <img class="food-img" src="/images/spicy_dan_dan.png" alt="Spicy Dan Dan" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Spicy Dan Dan</h4>
+                  <span class="food-price">$10.95</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Sichuan peppercorn sauce, ground pork, scallions, roasted peanuts, and chili oil.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="spicy_dan_dan" data-price="10.95" data-name="Spicy Dan Dan">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="spicy_dan_dan">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="spicy_dan_dan">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="spicy_dan_dan">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="noodle-house" data-category="main">
+              <img class="food-img" src="/images/beef_chow_mein.png" alt="Beef Chow Mein" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Beef Chow Mein</h4>
+                  <span class="food-price">$11.50</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Wok-fried egg noodles with tender flank steak, bok choy, carrots, onions, and bean sprouts.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="beef_chow_mein" data-price="11.50" data-name="Beef Chow Mein">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="beef_chow_mein">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="beef_chow_mein">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="beef_chow_mein">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="noodle-house" data-category="sides">
+              <img class="food-img" src="/images/pork_gyoza.png" alt="Pork Gyoza (6pc)" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Pork Gyoza (6pc)</h4>
+                  <span class="food-price">$6.50</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Hand-wrapped pan-fried dumplings with seasoned pork filling and a house dipping sauce.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="pork_gyoza" data-price="6.50" data-name="Pork Gyoza (6pc)">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="pork_gyoza">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="pork_gyoza">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="pork_gyoza">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Western Grill Dishes -->
+            <div class="food-card" data-stall="western-grill" data-category="main">
+              <img class="food-img" src="/images/chicken_meal.png" alt="Chicken Breast Meal" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Chicken Breast Meal</h4>
+                  <span class="food-price">$22.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Grilled chicken breast seasoned with herbs, served with roasted sweet potato and broccoli.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="chicken_meal" data-price="22.00" data-name="Chicken Breast Meal">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="chicken_meal">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="chicken_meal">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="chicken_meal">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="western-grill" data-category="main">
+              <img class="food-img" src="/images/sour_beef.png" alt="Gourmet Beef Burger" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Gourmet Beef Burger</h4>
+                  <span class="food-price">$35.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Juicy flame-grilled beef patty, cheddar cheese, lettuce, tomato, and signature burger sauce.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="beef_burger" data-price="35.00" data-name="Gourmet Beef Burger">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="beef_burger">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="beef_burger">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="beef_burger">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="western-grill" data-category="sides">
+              <img class="food-img" src="/images/tofu_broccoli.png" alt="Crispy French Fries" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Crispy French Fries</h4>
+                  <span class="food-price">$12.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Golden crinkle-cut French fries, seasoned lightly with sea salt, served hot.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="french_fries" data-price="12.00" data-name="Crispy French Fries">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="french_fries">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="french_fries">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="french_fries">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Healthy Bowls Dishes -->
+            <div class="food-card" data-stall="salad-drinks" data-category="main">
+              <img class="food-img" src="/images/tofu_broccoli.png" alt="Tofu Broccoli Salad" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Tofu Broccoli Salad</h4>
+                  <span class="food-price">$15.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Crisp blanched broccoli tossed with marinated tofu cubes and sesame dressing.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="tofu_salad" data-price="15.00" data-name="Tofu Broccoli Salad">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="tofu_salad">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="tofu_salad">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="tofu_salad">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="food-card" data-stall="salad-drinks" data-category="main">
+              <img class="food-img" src="/images/chicken_meal.png" alt="Avocado Chicken Salad" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Avocado Chicken Salad</h4>
+                  <span class="food-price">$28.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Sliced tender chicken breast, ripe avocado, crisp mixed greens, and vinaigrette.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="avocado_salad" data-price="28.00" data-name="Avocado Chicken Salad">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="avocado_salad">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="avocado_salad">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="avocado_salad">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shared Drinks -->
+            <div class="food-card" data-stall="noodle-house western-grill salad-drinks" data-category="drinks">
+              <img class="food-img" src="/images/plum_soup.png" alt="Sweet Sour Plum Soup" />
+              <div class="food-info">
+                <div class="food-header">
+                  <h4 class="food-title">Sweet Sour Plum Soup</h4>
+                  <span class="food-price">$6.00</span>
+                </div>
+                <div class="food-desc-actions-card">
+                  <p class="food-desc">Traditional chilled sweet and sour dark plum tea, perfect for quenching heat.</p>
+                  <div class="food-actions">
+                    <button type="button" class="btn-add-cart-circle" aria-label="Add to cart" data-id="plum_soup" data-price="6.00" data-name="Sweet Sour Plum Soup">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                    <div class="quantity-control hidden" data-id="plum_soup">
+                      <button type="button" class="btn-qty-minus" aria-label="Decrease quantity" data-id="plum_soup">-</button>
+                      <span class="qty-number-box">0</span>
+                      <button type="button" class="btn-qty-plus" aria-label="Increase quantity" data-id="plum_soup">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Cart Bar (FAB) -->
+        <div class="cart-floating-bar hidden" id="cart-floating-bar">
+          <div class="cart-floating-left">
+            <span class="material-symbols-outlined cart-fab-icon">shopping_cart</span>
+            <span class="cart-fab-label" id="cart-fab-text">Cart (0)</span>
+          </div>
+          <div class="cart-floating-price" id="cart-fab-price">$0.00</div>
+        </div>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <div class="bottom-nav">
+          <div class="nav-tab active" data-tab="menu">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">restaurant</span>
+            </div>
+            <span class="nav-label">Menu</span>
+          </div>
+          <div class="nav-tab" data-tab="orders">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">receipt</span>
+            </div>
+            <span class="nav-label">Orders</span>
+          </div>
+          <div class="nav-tab" data-tab="profile">
+            <div class="nav-pill">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <span class="nav-label">Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CART BOTTOM SHEET ================= -->
+      <div id="cart-sheet-scrim" class="cart-sheet-scrim"></div>
+      <div id="cart-sheet" class="cart-sheet">
+        <!-- Drag Handle -->
+        <div class="cart-sheet-drag-handle"></div>
+        
+        <!-- Header -->
+        <div class="cart-sheet-header">
+          <div class="cart-sheet-title-box">
+            <h3 class="cart-sheet-title">Your Cart</h3>
+            <span class="cart-sheet-subtitle" id="cart-sheet-subtitle">Noodle House</span>
+          </div>
+          <button type="button" class="cart-sheet-close-btn" id="cart-sheet-close-btn" aria-label="Close cart">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="cart-sheet-content">
+          <div class="cart-sheet-items-list" id="cart-sheet-items-list">
+            <!-- Dynamically populated cart items -->
+          </div>
+        </div>
+
+        <!-- Footer / Action Bar -->
+        <div class="cart-sheet-footer">
+          <button type="button" class="btn-checkout" id="btn-checkout">
+            <div class="btn-checkout-left">
+              <span class="material-symbols-outlined btn-checkout-icon">shopping_cart_checkout</span>
+              <span>Go to Checkout</span>
+            </div>
+            <span class="btn-checkout-price" id="checkout-total-price">$0.00</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= TOAST NOTIFICATION ================= -->
+      <div id="app-toast" class="toast">
+        <span class="material-symbols-outlined" id="toast-icon">info</span>
+        <span id="toast-msg">Alert Notification</span>
+      </div>
+
+    </div>
+
+    <!-- Main Module Script -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
