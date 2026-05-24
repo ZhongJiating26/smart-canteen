@@ -14,6 +14,18 @@ spring:
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DATABASE:0}
 
+seata:
+  enabled: ${SEATA_ENABLED:true}
+  application-id: ${spring.application.name}
+  tx-service-group: smart-canteen-tx-group
+  data-source-proxy-mode: AT
+  enable-auto-data-source-proxy: true
+  service:
+    vgroup-mapping:
+      smart-canteen-tx-group: ${SEATA_CLUSTER:default}
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

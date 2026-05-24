@@ -7,4 +7,6 @@ public interface MerchantService {
     Merchant requireCurrentMerchant();
 
     Merchant requireMerchant(Long merchantId);
+
+    Merchant requireMerchantByUserId(Long userId);
 }

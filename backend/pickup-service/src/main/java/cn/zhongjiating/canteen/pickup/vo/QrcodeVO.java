@@ -5,6 +5,7 @@ import cn.zhongjiating.canteen.pickup.entity.PickupQrcode;
 import java.time.LocalDateTime;
 
 public record QrcodeVO(
+        Long qrcodeId,
         Long orderId,
         String pickupNo,
         String pickupCode,
@@ -13,7 +14,7 @@ public record QrcodeVO(
         LocalDateTime createTime
 ) {
     public static QrcodeVO from(PickupQrcode qrcode, String pickupNo) {
-        return new QrcodeVO(qrcode.getOrderId(), pickupNo, qrcode.getPickupCode(), qrcode.getQrcodeContent(),
+        return new QrcodeVO(qrcode.getId(), qrcode.getOrderId(), pickupNo, qrcode.getPickupCode(), qrcode.getQrcodeContent(),
                 qrcode.getIsVerified() == 1, qrcode.getCreateTime());
     }
 }

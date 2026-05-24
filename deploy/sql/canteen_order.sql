@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `order` (
 CREATE TABLE IF NOT EXISTS `order_item` (
     `id` BIGINT NOT NULL COMMENT '主键',
     `order_id` BIGINT NOT NULL COMMENT '关联订单 ID',
+    `daily_menu_item_id` BIGINT NOT NULL COMMENT '每日菜单项 ID，用于库存释放和核销',
     `dish_id` BIGINT NOT NULL COMMENT '菜品 ID',
     `dish_name` VARCHAR(100) NOT NULL COMMENT '下单时菜品名称快照',
     `dish_image` MEDIUMBLOB DEFAULT NULL COMMENT '下单时菜品图片二进制快照',
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `order_item` (
     `subtotal` DECIMAL(10, 2) NOT NULL COMMENT '小计',
     PRIMARY KEY (`id`),
     KEY `idx_order_id` (`order_id`),
+    KEY `idx_daily_menu_item_id` (`daily_menu_item_id`),
     KEY `idx_dish_id` (`dish_id`),
     CONSTRAINT `ck_order_item_price` CHECK (`unit_price` >= 0 AND `subtotal` >= 0),
     CONSTRAINT `ck_order_item_quantity` CHECK (`quantity` > 0)

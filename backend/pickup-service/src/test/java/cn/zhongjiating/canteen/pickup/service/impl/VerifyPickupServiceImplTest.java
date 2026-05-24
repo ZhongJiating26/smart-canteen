@@ -1,5 +1,6 @@
 package cn.zhongjiating.canteen.pickup.service.impl;
 
+import cn.zhongjiating.canteen.common.dto.Result;
 import cn.zhongjiating.canteen.pickup.dto.VerifyPickupRequest;
 import cn.zhongjiating.canteen.pickup.entity.PickupQrcode;
 import cn.zhongjiating.canteen.pickup.entity.VerifyRecord;
@@ -50,6 +51,7 @@ class VerifyPickupServiceImplTest {
         waiting.setOrderId(9001L);
         when(pickupQrcodeMapper.selectOne(any())).thenReturn(qrcode);
         when(waitingQueueItemMapper.selectOne(any())).thenReturn(waiting);
+        when(orderFeignClient.complete(9001L)).thenReturn(Result.success());
 
         VerifyPickupServiceImpl service = new VerifyPickupServiceImpl(pickupQrcodeMapper, waitingQueueItemMapper,
                 verifyRecordMapper, queueCacheService, webSocketPushService, orderFeignClient, new ObjectMapper());

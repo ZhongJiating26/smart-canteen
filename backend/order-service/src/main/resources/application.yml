@@ -7,6 +7,37 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/canteen_order?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:root}
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
+  producer:
+    group: order-timeout-producer
+
+seata:
+  enabled: ${SEATA_ENABLED:true}
+  application-id: ${spring.application.name}
+  tx-service-group: smart-canteen-tx-group
+  data-source-proxy-mode: AT
+  enable-auto-data-source-proxy: true
+  service:
+    vgroup-mapping:
+      smart-canteen-tx-group: ${SEATA_CLUSTER:default}
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+
+canteen:
+  order:
+    timeout:
+      topic: ${ORDER_TIMEOUT_TOPIC:order-timeout}
+      consumer-group: ${ORDER_TIMEOUT_CONSUMER_GROUP:order-timeout-consumer}
+      delay-level: ${ORDER_TIMEOUT_DELAY_LEVEL:14}
+      scan-fixed-delay-ms: ${ORDER_TIMEOUT_SCAN_FIXED_DELAY_MS:60000}
 
 mybatis-plus:
   configuration:

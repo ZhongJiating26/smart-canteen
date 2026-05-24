@@ -2,8 +2,32 @@ server:
   port: 9000
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "${CORS_ALLOWED_ORIGINS:*}"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers:
+              - Authorization
+              - Content-Type
+              - X-Idempotent-Key
+              - X-Requested-With
+            exposed-headers:
+              - Authorization
+            allow-credentials: true
       routes:
         - id: user-service
           uri: lb://user-service
@@ -16,11 +40,34 @@ spring:
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/order/**
+            - Path=/api/order/**,/api/admin/order/config/**
         - id: pickup-service
           uri: lb://pickup-service
           predicates:
             - Path=/api/pickup/**,/api/admin/pickup/config/**,/ws/**
+
+smart-canteen:
+  jwt:
+    secret: ${JWT_SECRET:smart-canteen-local-development-secret}
+
+gateway:
+  rate-limit:
+    ip: ${GATEWAY_RATE_LIMIT_IP:100}
+    user: ${GATEWAY_RATE_LIMIT_USER:50}
+    sensitive: ${GATEWAY_RATE_LIMIT_SENSITIVE:5}
+    sensitive-apis:
+      - method: POST
+        path-pattern: /api/user/send-code
+      - method: POST
+        path-pattern: /api/user/register
+      - method: POST
+        path-pattern: /api/user/login/**
+      - method: POST
+        path-pattern: /api/user/refresh
+      - method: POST
+        path-pattern: /api/order/*/pay
+      - method: POST
+        path-pattern: /api/pickup/verify
 
 management:
   endpoints:

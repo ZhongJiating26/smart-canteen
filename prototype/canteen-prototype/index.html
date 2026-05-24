@@ -277,27 +277,7 @@
           </div>
         </div>
 
-        <!-- Fixed Bottom Navigation Bar -->
-        <div class="bottom-nav">
-          <div class="nav-tab active" id="tab-menu" data-tab="menu">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">restaurant</span>
-            </div>
-            <span class="nav-label">Menu</span>
-          </div>
-          <div class="nav-tab" id="tab-orders" data-tab="orders">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">receipt</span>
-            </div>
-            <span class="nav-label">Orders</span>
-          </div>
-          <div class="nav-tab" id="tab-profile" data-tab="profile">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">person</span>
-            </div>
-            <span class="nav-label">Profile</span>
-          </div>
-        </div>
+
       </div>
 
       <!-- ================= DISHES MENU DETAIL SCREEN ================= -->
@@ -577,27 +557,333 @@
           <div class="cart-floating-price" id="cart-fab-price">$0.00</div>
         </div>
 
-        <!-- Fixed Bottom Navigation Bar -->
-        <div class="bottom-nav">
-          <div class="nav-tab active" data-tab="menu">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">restaurant</span>
-            </div>
-            <span class="nav-label">Menu</span>
+
+      </div>
+
+      <!-- ================= DISH DETAIL SCREEN ================= -->
+      <div id="dish-detail-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-start gap-12" style="background-color: var(--color-bg-card);">
+          <span class="material-symbols-outlined header-icon clickable" id="dish-detail-back">arrow_back</span>
+          <span class="dish-detail-header-title" id="dish-detail-header-stall-name">Stall Name</span>
+        </header>
+
+        <!-- Scrollable Detail Content -->
+        <div class="dish-detail-container">
+          <!-- Dish Image -->
+          <div class="dish-detail-hero">
+            <img id="dish-detail-img" src="" alt="Dish Image" />
           </div>
-          <div class="nav-tab" data-tab="orders">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">receipt</span>
+
+          <!-- White Content Sheet -->
+          <div class="dish-detail-sheet">
+            <div class="dish-detail-info-group">
+              <div class="dish-detail-main-info">
+                <div class="dish-detail-info-left">
+                  <span class="dish-detail-category" id="dish-detail-category">MAIN DISH</span>
+                  <h1 class="dish-detail-title" id="dish-detail-title">Dish Title</h1>
+                  <div class="dish-detail-stall-row">
+                    <span class="material-symbols-outlined">restaurant</span>
+                    <span id="dish-detail-stall-name">Stall Name</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dish-detail-price-row">
+                <div class="dish-detail-price" id="dish-detail-price">$0.00</div>
+              </div>
             </div>
-            <span class="nav-label">Orders</span>
-          </div>
-          <div class="nav-tab" data-tab="profile">
-            <div class="nav-pill">
-              <span class="material-symbols-outlined">person</span>
+
+            <!-- Availability Card -->
+            <div class="dish-detail-availability-card">
+              <div class="availability-header">
+                <span>Availability</span>
+                <span class="availability-count" id="dish-detail-stock">0 left</span>
+              </div>
+              <div class="availability-progress-bar">
+                <div class="availability-progress-fill" id="dish-detail-progress-fill" style="width: 100%;"></div>
+              </div>
             </div>
-            <span class="nav-label">Profile</span>
+
+            <!-- About this dish section -->
+            <div class="dish-detail-about-section">
+              <h2>About this dish</h2>
+              <p id="dish-detail-desc">Dish description.</p>
+            </div>
           </div>
         </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="dish-detail-bottom-bar">
+          <div class="quantity-control hidden" id="dish-detail-qty-control">
+            <button type="button" class="btn-qty-minus" id="dish-detail-qty-minus">-</button>
+            <span class="qty-number-box" id="dish-detail-qty-num">1</span>
+            <button type="button" class="btn-qty-plus" id="dish-detail-qty-plus">+</button>
+          </div>
+          <button type="button" class="btn-primary dish-detail-add-btn" id="dish-detail-add-btn">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span id="dish-detail-add-btn-text">Add to Order</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= CONFIRM ORDER SCREEN ================= -->
+      <div id="confirm-order-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-start gap-12" style="background-color: var(--color-bg-card);">
+          <span class="material-symbols-outlined header-icon clickable" id="confirm-order-back">arrow_back</span>
+          <span class="dish-detail-header-title">Confirm Order</span>
+        </header>
+
+        <!-- Scrollable content -->
+        <div class="confirm-order-container">
+          <!-- Pickup Stall Card -->
+          <div class="confirm-order-pickup-card">
+            <div class="confirm-order-icon-badge">
+              <span class="material-symbols-outlined">storefront</span>
+            </div>
+            <span class="confirm-order-pickup-text" id="confirm-order-pickup-stall">Pickup Stall: Noodle House</span>
+          </div>
+
+          <!-- Selection Card -->
+          <div class="confirm-order-card">
+            <h3 class="confirm-order-card-title">YOUR SELECTION</h3>
+            <div class="confirm-order-items-list" id="confirm-order-items-list">
+              <!-- Dynamically populated in main.js -->
+            </div>
+            <div class="confirm-order-divider"></div>
+            <div class="confirm-order-total-row">
+              <span class="confirm-order-total-label">Order Total</span>
+              <span class="confirm-order-total-price" id="confirm-order-total-price">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Special Remarks Section -->
+          <div class="confirm-order-remarks-section">
+            <label class="confirm-order-remarks-label">Special Remarks</label>
+            <div class="confirm-order-remarks-card">
+              <textarea id="confirm-order-remarks-input" placeholder="E.g. No peanuts, extra spicy..." rows="3"></textarea>
+              <span class="material-symbols-outlined confirm-order-remarks-icon">edit_note</span>
+            </div>
+          </div>
+
+          <!-- Payment Card -->
+          <div class="confirm-order-payment-card">
+            <div class="confirm-order-payment-left">
+              <span class="material-symbols-outlined">badge</span>
+              <span class="confirm-order-payment-text">Payment: Campus Card (Credits)</span>
+            </div>
+            <span class="confirm-order-payment-change">Change</span>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom Submit Button -->
+        <div class="confirm-order-bottom-bar">
+          <button type="button" class="btn-primary confirm-order-submit-btn" id="confirm-order-submit-btn">
+            <span>Submit Order</span>
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= PAYMENT SCREEN ================= -->
+      <div id="payment-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-between">
+          <span class="material-symbols-outlined header-icon clickable" id="payment-close" style="color: var(--color-text-primary);">close</span>
+          <span class="payment-header-title" style="font-weight: 700; font-size: 1.15rem; color: var(--color-text-primary);">Pay</span>
+          <span style="width: 24px;"></span> <!-- spacer to keep it centered -->
+        </header>
+
+        <!-- Content -->
+        <div class="payment-container">
+          <div class="payment-top-section">
+            <!-- Bill Summary Card -->
+            <div class="payment-bill-card">
+              <div class="payment-bill-header">
+                <div class="payment-bill-title-box">
+                  <span class="payment-bill-label">Total Amount</span>
+                  <span class="payment-bill-amount" id="payment-total-amount">$0.00</span>
+                </div>
+                <span class="payment-badge-pending">Pending</span>
+              </div>
+              <div class="payment-bill-divider"></div>
+              <div class="payment-bill-items" id="payment-bill-items">
+                <!-- Dynamically populated in main.js -->
+              </div>
+            </div>
+
+            <!-- Password Input Section -->
+            <div class="payment-password-section">
+              <h4 class="payment-password-title">Enter Payment Password</h4>
+              <p class="payment-password-subtitle">Verify your identity to authorize the transaction</p>
+              
+              <!-- Dots Indicator -->
+              <div class="payment-dots-container" id="payment-dots-container">
+                <span class="payment-dot"></span>
+                <span class="payment-dot"></span>
+                <span class="payment-dot"></span>
+                <span class="payment-dot"></span>
+                <span class="payment-dot"></span>
+                <span class="payment-dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="payment-bottom-section">
+            <!-- Keypad Section -->
+            <div class="payment-keypad">
+              <button type="button" class="keypad-btn" data-key="1">1</button>
+              <button type="button" class="keypad-btn" data-key="2">2</button>
+              <button type="button" class="keypad-btn" data-key="3">3</button>
+              <button type="button" class="keypad-btn" data-key="4">4</button>
+              <button type="button" class="keypad-btn" data-key="5">5</button>
+              <button type="button" class="keypad-btn" data-key="6">6</button>
+              <button type="button" class="keypad-btn" data-key="7">7</button>
+              <button type="button" class="keypad-btn" data-key="8">8</button>
+              <button type="button" class="keypad-btn" data-key="9">9</button>
+              <div class="keypad-empty"></div>
+              <button type="button" class="keypad-btn" data-key="0">0</button>
+              <button type="button" class="keypad-btn keypad-backspace" data-key="backspace">
+                <span class="material-symbols-outlined">backspace</span>
+              </button>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="payment-actions">
+              <button type="button" class="btn-primary payment-confirm-btn" id="payment-confirm-btn" disabled>Confirm Payment</button>
+              <button type="button" class="payment-cancel-btn" id="payment-cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ORDERS LIST SCREEN ================= -->
+      <div id="orders-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header">
+          <span class="brand-title">Your Orders</span>
+        </header>
+
+        <!-- Filter Tab Row -->
+        <div class="orders-filter-bar">
+          <div class="orders-filter-tab active" data-filter="all">All</div>
+          <div class="orders-filter-tab" data-filter="placed">Pending</div>
+          <div class="orders-filter-tab" data-filter="preparing">Preparing</div>
+          <div class="orders-filter-tab" data-filter="ready">Ready</div>
+          <div class="orders-filter-tab" data-filter="completed">Completed</div>
+        </div>
+
+        <!-- List Content -->
+        <div class="orders-list-container" id="orders-list-container">
+          <!-- Dynamically populated in main.js -->
+        </div>
+
+
+      </div>
+
+      <!-- ================= ORDER DETAILS SCREEN ================= -->
+      <div id="order-detail-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-between">
+          <span class="material-symbols-outlined header-icon clickable" id="order-detail-back">arrow_back</span>
+          <span class="order-detail-header-title" style="font-weight: 700; font-size: 1.15rem; color: var(--color-text-primary);">Order Details</span>
+          <span style="width: 24px;"></span>
+        </header>
+
+        <!-- Simulator switcher controls (demo purposes) -->
+        <div class="simulation-row">
+          <span style="font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; color: var(--color-text-secondary);">Demo Switcher:</span>
+          <button type="button" class="sim-btn" data-sim="placed">Placed</button>
+          <button type="button" class="sim-btn" data-sim="preparing">Prep</button>
+          <button type="button" class="sim-btn" data-sim="ready">Ready</button>
+          <button type="button" class="sim-btn" data-sim="completed">Done</button>
+        </div>
+
+        <!-- Scrollable content -->
+        <div class="order-detail-container" style="flex: 1; overflow-y: auto; padding-bottom: 96px; display: flex; flex-direction: column; gap: 16px;">
+          
+          <!-- Stepper Timeline Card -->
+          <div class="order-stepper-card">
+            <div class="timeline-stepper">
+              <div class="timeline-line">
+                <div class="timeline-line-fill" id="order-timeline-line-fill"></div>
+              </div>
+              
+              <div class="timeline-step" id="step-placed">
+                <div class="timeline-step-circle">
+                  <span class="material-symbols-outlined" style="font-size: 1.15rem;">check</span>
+                </div>
+                <span class="timeline-step-label">Ordered</span>
+                <span class="timeline-step-time" id="time-placed">--:--</span>
+              </div>
+              
+              <div class="timeline-step" id="step-preparing">
+                <div class="timeline-step-circle">
+                  <span class="material-symbols-outlined" style="font-size: 1.15rem;">soup_kitchen</span>
+                </div>
+                <span class="timeline-step-label">Preparing</span>
+                <span class="timeline-step-time" id="time-preparing">--:--</span>
+              </div>
+              
+              <div class="timeline-step" id="step-ready">
+                <div class="timeline-step-circle">
+                  <span class="material-symbols-outlined" style="font-size: 1.15rem;">restaurant</span>
+                </div>
+                <span class="timeline-step-label">Ready</span>
+                <span class="timeline-step-time" id="time-ready">--:--</span>
+              </div>
+              
+              <div class="timeline-step" id="step-completed">
+                <div class="timeline-step-circle">
+                  <span class="material-symbols-outlined" style="font-size: 1.15rem;">inbox</span>
+                </div>
+                <span class="timeline-step-label">Collected</span>
+                <span class="timeline-step-time" id="time-completed">--:--</span>
+              </div>
+            </div>
+            
+            <!-- Status Badge Pill -->
+            <span class="stepper-status-pill" id="order-status-pill-val">READY FOR PICKUP</span>
+          </div>
+
+          <!-- Status Info Display Card -->
+          <div class="order-status-detail-card" id="order-detail-status-card">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Items Summary Card -->
+          <div class="confirm-order-card" style="margin: 0 16px;">
+            <h3 class="confirm-order-card-title" style="letter-spacing: 0.5px;">ITEMS SUMMARY</h3>
+            <div class="confirm-order-items-list" id="order-detail-items-list">
+              <!-- Dynamically populated in main.js -->
+            </div>
+            <div class="confirm-order-divider"></div>
+            <div class="confirm-order-total-row">
+              <span class="confirm-order-total-label">Total</span>
+              <span class="confirm-order-total-price" id="order-detail-total-price" style="font-size: 1.35rem;">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Remarks Card -->
+          <div class="order-detail-remarks-card" id="order-detail-remarks-wrapper" style="background-color: var(--color-bg-card); border-radius: 20px; padding: 16px; margin: 0 16px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 0.85rem; font-weight: 700;">
+              <span class="material-symbols-outlined" style="font-size: 1.2rem;">chat_bubble</span>
+              <span>REMARKS</span>
+            </div>
+            <p id="order-detail-remarks-val" style="font-size: 0.95rem; color: var(--color-text-primary); font-style: italic; line-height: 1.4; padding-left: 4px;">
+              "No peanuts, extra spicy."
+            </p>
+          </div>
+
+          <!-- Bottom Actions inside scroll area -->
+          <div class="order-detail-actions" style="margin: 8px 16px 0; display: flex; flex-direction: column; gap: 12px;">
+            <button type="button" class="btn-primary" id="btn-order-cancel" style="background-color: transparent !important; color: var(--color-text-muted) !important; border: 1px solid var(--color-border) !important; box-shadow: none !important; cursor: not-allowed; display: none;">
+              Cancel Order (Not available)
+            </button>
+          </div>
+        </div>
+
+
       </div>
 
       <!-- ================= CART BOTTOM SHEET ================= -->
@@ -633,6 +919,28 @@
             </div>
             <span class="btn-checkout-price" id="checkout-total-price">$0.00</span>
           </button>
+        </div>
+      </div>
+
+      <!-- ================= GLOBAL BOTTOM NAVIGATION ================= -->
+      <div class="bottom-nav" id="global-bottom-nav">
+        <div class="nav-tab active" id="tab-menu" data-tab="menu">
+          <div class="nav-pill">
+            <span class="material-symbols-outlined">restaurant</span>
+          </div>
+          <span class="nav-label">Menu</span>
+        </div>
+        <div class="nav-tab" id="tab-orders" data-tab="orders">
+          <div class="nav-pill">
+            <span class="material-symbols-outlined">receipt</span>
+          </div>
+          <span class="nav-label">Orders</span>
+        </div>
+        <div class="nav-tab" id="tab-profile" data-tab="profile">
+          <div class="nav-pill">
+            <span class="material-symbols-outlined">person</span>
+          </div>
+          <span class="nav-label">Profile</span>
         </div>
       </div>
 

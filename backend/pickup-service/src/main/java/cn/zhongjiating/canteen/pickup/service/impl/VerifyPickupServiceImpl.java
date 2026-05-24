@@ -2,6 +2,7 @@ package cn.zhongjiating.canteen.pickup.service.impl;
 
 import cn.zhongjiating.canteen.common.enums.ErrorCode;
 import cn.zhongjiating.canteen.common.enums.VerifyType;
+import cn.zhongjiating.canteen.common.dto.Result;
 import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.pickup.dto.VerifyPickupRequest;
 import cn.zhongjiating.canteen.pickup.entity.PickupQrcode;
@@ -68,7 +69,7 @@ public class VerifyPickupServiceImpl implements VerifyPickupService {
         if (!waiting.getMerchantId().equals(request.merchantId())) {
             throw new BusinessException(ErrorCode.WRONG_STALL);
         }
-        orderFeignClient.complete(qrcode.getOrderId());
+        completeOrder(qrcode.getOrderId());
         LocalDateTime verifyTime = LocalDateTime.now();
         qrcode.setIsVerified(1);
         qrcode.setVerifyTime(verifyTime);
@@ -112,6 +113,15 @@ public class VerifyPickupServiceImpl implements VerifyPickupService {
 
     private BusinessException invalidQrcode() {
         return new BusinessException(ErrorCode.INVALID_PICKUP_CODE, "二维码内容无效");
+    }
+
+    private void completeOrder(Long orderId) {
+        Result<Void> result = orderFeignClient.complete(orderId);
+        if (result == null || result.getCode() == null || result.getCode() != 200) {
+            String message = result == null || result.getMessage() == null || result.getMessage().isBlank()
+                    ? "订单核销同步失败" : result.getMessage();
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+        }
     }
 
     private void insertRecord(Long operatorId, VerifyType verifyType, PickupQrcode qrcode,

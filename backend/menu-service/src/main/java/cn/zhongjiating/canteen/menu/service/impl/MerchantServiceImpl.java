@@ -43,4 +43,15 @@ public class MerchantServiceImpl implements MerchantService {
         }
         return merchant;
     }
+
+    @Override
+    public Merchant requireMerchantByUserId(Long userId) {
+        Merchant merchant = merchantMapper.selectOne(new LambdaQueryWrapper<Merchant>()
+                .eq(Merchant::getUserId, userId)
+                .eq(Merchant::getStatus, 1));
+        if (merchant == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "商家信息不存在或已停用");
+        }
+        return merchant;
+    }
 }
