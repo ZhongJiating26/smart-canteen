@@ -1,5 +1,6 @@
 package cn.zhongjiating.canteen.gateway.ratelimit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,7 @@ public class RedisTokenBucketRateLimiter implements TokenBucketRateLimiter {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final Clock clock;
 
+    @Autowired
     public RedisTokenBucketRateLimiter(ReactiveStringRedisTemplate redisTemplate) {
         this(redisTemplate, Clock.systemUTC());
     }
