@@ -435,6 +435,296 @@ function setupCanteenMenu() {
   const orderDetailView = $('#order-detail-view');
   const ordersListContainer = $('#orders-list-container');
   const orderDetailBack = $('#order-detail-back');
+
+  // Profile View elements
+  const profileView = $('#profile-view');
+  const btnEditProfile = $('#btn-edit-profile');
+  const btnSettingsOpt = $('#btn-settings-opt');
+  const btnHelpOpt = $('#btn-help-opt');
+  const btnLogoutOpt = $('#btn-logout-opt');
+  const logoutDialog = $('#logout-dialog');
+  const logoutDialogScrim = $('#logout-dialog-scrim');
+  const btnLogoutCancel = $('#btn-logout-cancel');
+  const btnLogoutConfirm = $('#btn-logout-confirm');
+
+  // Edit Profile View elements
+  const editProfileView = $('#edit-profile-view');
+  const editProfileBack = $('#edit-profile-back');
+  const btnChangeAvatar = $('#btn-change-avatar');
+  const editAvatarPreview = $('#edit-avatar-preview');
+  const editAvatarInput = $('#edit-avatar-input');
+  const editNickname = $('#edit-nickname');
+  const editStudentID = $('#edit-student-id');
+  const editPhone = $('#edit-phone');
+  const editVerificationRow = $('#edit-verification-row');
+  const editVerificationCode = $('#edit-verification-code');
+  const btnEditSendCode = $('#btn-edit-send-code');
+  const btnSaveProfile = $('#btn-save-profile');
+
+  // Avatar Picker elements
+  const avatarPickerDialog = $('#avatar-picker-dialog');
+  const avatarPickerScrim = $('#avatar-picker-scrim');
+  const btnAvatarPickerCancel = $('#btn-avatar-picker-cancel');
+  const avatarPresetItems = $$('.avatar-preset-item');
+
+  let originalPhone = '';
+  let selectedAvatarSrc = '';
+  let mockEditVerificationCode = '';
+
+  if (btnEditProfile) {
+    btnEditProfile.addEventListener('click', () => {
+      // Get current values
+      const currentName = $('#profile-display-name') ? $('#profile-display-name').textContent.trim() : '';
+      const currentPhone = $('#profile-display-phone') ? $('#profile-display-phone').textContent.trim() : '';
+      
+      // Parse ID: STU-882910 -> STU-882910
+      const idText = $('#profile-display-student-id') ? $('#profile-display-student-id').textContent.trim() : '';
+      const currentID = idText.replace(/^ID:\s*/i, '');
+      
+      const currentAvatar = $('#profile-avatar-img') ? $('#profile-avatar-img').src : '';
+
+      // Populate input fields
+      if (editNickname) editNickname.value = currentName;
+      if (editStudentID) editStudentID.value = currentID;
+      if (editPhone) editPhone.value = currentPhone;
+      if (editAvatarPreview) editAvatarPreview.src = currentAvatar;
+
+      originalPhone = currentPhone;
+      selectedAvatarSrc = currentAvatar;
+      mockEditVerificationCode = '';
+
+      // Hide verification row by default
+      if (editVerificationRow) {
+        editVerificationRow.classList.add('hidden');
+        editVerificationRow.style.display = 'none';
+      }
+      if (editVerificationCode) editVerificationCode.value = '';
+
+      // Update avatar preset highlight
+      avatarPresetItems.forEach(item => {
+        const img = item.querySelector('img');
+        if (img && img.src === currentAvatar) {
+          item.classList.add('active');
+          item.style.borderColor = 'var(--color-brand-rust)';
+        } else {
+          item.classList.remove('active');
+          item.style.borderColor = 'transparent';
+        }
+      });
+
+      // Slide views
+      if (profileView) {
+        profileView.classList.remove('state-center');
+        profileView.classList.add('state-left');
+      }
+      if (editProfileView) {
+        editProfileView.classList.remove('state-right');
+        editProfileView.classList.add('state-center');
+      }
+    });
+  }
+
+  if (editPhone) {
+    editPhone.addEventListener('input', () => {
+      const inputVal = editPhone.value.trim();
+      if (inputVal !== originalPhone) {
+        if (editVerificationRow) {
+          editVerificationRow.classList.remove('hidden');
+          editVerificationRow.style.display = 'flex';
+        }
+      } else {
+        if (editVerificationRow) {
+          editVerificationRow.classList.add('hidden');
+          editVerificationRow.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  // Restrict edit verification code to 6 digits
+  if (editVerificationCode) {
+    editVerificationCode.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
+  }
+
+  // Send Code Handler for Edit Profile
+  if (btnEditSendCode) {
+    btnEditSendCode.addEventListener('click', () => {
+      const phone = editPhone ? editPhone.value.trim() : '';
+      if (!phone) {
+        showToast('Please enter your Phone Number first!', 'warning');
+        return;
+      }
+      
+      let secondsLeft = 60;
+      btnEditSendCode.disabled = true;
+      btnEditSendCode.textContent = `${secondsLeft}s`;
+      
+      // Generate code
+      mockEditVerificationCode = String(Math.floor(100000 + Math.random() * 900000));
+      setTimeout(() => {
+        showToast(`Verification code sent! Code: ${mockEditVerificationCode}`, 'sms');
+      }, 800);
+
+      const countdown = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(countdown);
+          btnEditSendCode.disabled = false;
+          btnEditSendCode.textContent = 'Send Code';
+        } else {
+          btnEditSendCode.textContent = `${secondsLeft}s`;
+        }
+      }, 1000);
+    });
+  }
+
+  // Avatar Selection Handlers (triggering native browser file upload)
+  if (btnChangeAvatar && editAvatarInput) {
+    btnChangeAvatar.addEventListener('click', () => {
+      editAvatarInput.click();
+    });
+  }
+
+  if (editAvatarInput) {
+    editAvatarInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          showToast('Please select an image file!', 'warning');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          selectedAvatarSrc = event.target.result;
+          if (editAvatarPreview) {
+            editAvatarPreview.src = selectedAvatarSrc;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Back button handler
+  if (editProfileBack) {
+    editProfileBack.addEventListener('click', () => {
+      if (editProfileView) {
+        editProfileView.classList.remove('state-center');
+        editProfileView.classList.add('state-right');
+      }
+      if (profileView) {
+        profileView.classList.remove('state-left');
+        profileView.classList.add('state-center');
+      }
+    });
+  }
+
+  // Save changes handler
+  if (btnSaveProfile) {
+    btnSaveProfile.addEventListener('click', () => {
+      const nicknameVal = editNickname ? editNickname.value.trim() : '';
+      const phoneVal = editPhone ? editPhone.value.trim() : '';
+      const studentIDVal = editStudentID ? editStudentID.value.trim() : '';
+
+      if (!nicknameVal) {
+        showToast('Nickname cannot be empty!', 'warning');
+        return;
+      }
+
+      if (!phoneVal) {
+        showToast('Phone number cannot be empty!', 'warning');
+        return;
+      }
+
+      // If phone changed, check verification code
+      if (phoneVal !== originalPhone) {
+        const enteredCode = editVerificationCode ? editVerificationCode.value.trim() : '';
+        if (!enteredCode) {
+          showToast('Please enter the verification code!', 'warning');
+          return;
+        }
+        if (enteredCode !== mockEditVerificationCode) {
+          showToast('Invalid verification code!', 'error');
+          return;
+        }
+      }
+
+      // Update values in display
+      const displayNameEl = $('#profile-display-name');
+      const displayPhoneEl = $('#profile-display-phone');
+      const displayIDEl = $('#profile-display-student-id');
+      const avatarImgEl = $('#profile-avatar-img');
+
+      if (displayNameEl) displayNameEl.textContent = nicknameVal;
+      if (displayPhoneEl) displayPhoneEl.textContent = phoneVal;
+      if (displayIDEl) displayIDEl.textContent = studentIDVal ? `ID: ${studentIDVal}` : '';
+      if (avatarImgEl && selectedAvatarSrc) avatarImgEl.src = selectedAvatarSrc;
+
+      // Update Promo greeting if greeting exists (e.g. Hungry, Alex?)
+      const promoGreetingEl = $('#promo-greeting');
+      if (promoGreetingEl) {
+        promoGreetingEl.textContent = `Hungry, ${nicknameVal}?`;
+      }
+
+      showToast('Profile updated successfully!', 'check_circle');
+
+      // Go back
+      if (editProfileView) {
+        editProfileView.classList.remove('state-center');
+        editProfileView.classList.add('state-right');
+      }
+      if (profileView) {
+        profileView.classList.remove('state-left');
+        profileView.classList.add('state-center');
+      }
+    });
+  }
+  if (btnSettingsOpt) {
+    btnSettingsOpt.addEventListener('click', () => {
+      showToast('Settings features coming soon!', 'settings');
+    });
+  }
+  if (btnHelpOpt) {
+    btnHelpOpt.addEventListener('click', () => {
+      showToast('Help & Support features coming soon!', 'help');
+    });
+  }
+  if (btnLogoutOpt) {
+    btnLogoutOpt.addEventListener('click', () => {
+      if (logoutDialog && logoutDialogScrim) {
+        logoutDialog.classList.add('show');
+        logoutDialogScrim.classList.add('show');
+      }
+    });
+  }
+  if (btnLogoutCancel) {
+    btnLogoutCancel.addEventListener('click', () => {
+      if (logoutDialog && logoutDialogScrim) {
+        logoutDialog.classList.remove('show');
+        logoutDialogScrim.classList.remove('show');
+      }
+    });
+  }
+  if (logoutDialogScrim) {
+    logoutDialogScrim.addEventListener('click', () => {
+      if (logoutDialog && logoutDialogScrim) {
+        logoutDialog.classList.remove('show');
+        logoutDialogScrim.classList.remove('show');
+      }
+    });
+  }
+  if (btnLogoutConfirm) {
+    btnLogoutConfirm.addEventListener('click', () => {
+      if (logoutDialog && logoutDialogScrim) {
+        logoutDialog.classList.remove('show');
+        logoutDialogScrim.classList.remove('show');
+      }
+      handleLogout();
+    });
+  }
   
   let activeOrderFilter = 'all';
   const orderFilterTabs = $$('.orders-filter-tab');
@@ -1007,18 +1297,41 @@ function setupCanteenMenu() {
       const tabName = tab.getAttribute('data-tab');
 
       if (tabName === 'profile') {
-        handleLogout();
-      } else if (tabName === 'orders') {
-        syncBottomNavActiveTab('orders');
-        renderOrdersList();
+        syncBottomNavActiveTab('profile');
         
-        // Hide other center views
-        [menuView, dishesView, dishDetailView, confirmOrderView, paymentView, orderDetailView].forEach(v => {
+        // Hide other center views by sliding them to state-left
+        [menuView, dishesView, dishDetailView, confirmOrderView, paymentView, ordersView, orderDetailView].forEach(v => {
           if (v) {
             v.classList.remove('state-center');
             v.classList.add('state-left');
           }
         });
+        if (profileView) {
+          profileView.classList.remove('state-right', 'state-left');
+          profileView.classList.add('state-center');
+        }
+      } else if (tabName === 'orders') {
+        syncBottomNavActiveTab('orders');
+        renderOrdersList();
+        
+        // Hide menu-side views by sliding them to state-left
+        [menuView, dishesView, dishDetailView, confirmOrderView, paymentView].forEach(v => {
+          if (v) {
+            v.classList.remove('state-center');
+            v.classList.add('state-left');
+          }
+        });
+        // Hide profile-side views by sliding them to state-right
+        if (profileView) {
+          profileView.classList.remove('state-center');
+          profileView.classList.add('state-right');
+        }
+        // Sibling order details slides to left
+        if (orderDetailView) {
+          orderDetailView.classList.remove('state-center');
+          orderDetailView.classList.add('state-left');
+        }
+        
         if (ordersView) {
           ordersView.classList.remove('state-right', 'state-left');
           ordersView.classList.add('state-center');
@@ -1026,8 +1339,8 @@ function setupCanteenMenu() {
       } else if (tabName === 'menu') {
         syncBottomNavActiveTab('menu');
         
-        // Hide other center views
-        [dishesView, dishDetailView, confirmOrderView, paymentView, ordersView, orderDetailView].forEach(v => {
+        // Hide all other views by sliding them to state-right
+        [dishesView, dishDetailView, confirmOrderView, paymentView, ordersView, orderDetailView, profileView].forEach(v => {
           if (v) {
             v.classList.remove('state-center');
             v.classList.add('state-right');
@@ -1046,14 +1359,12 @@ function setupCanteenMenu() {
     closeCartSheet();
     
     // Transition back to login view
-    if (menuView) {
-      menuView.classList.remove('state-center');
-      menuView.classList.add('state-right');
-    }
-    if (dishesView) {
-      dishesView.classList.remove('state-center');
-      dishesView.classList.add('state-right');
-    }
+    [menuView, dishesView, dishDetailView, confirmOrderView, paymentView, ordersView, orderDetailView, profileView, editProfileView].forEach(v => {
+      if (v) {
+        v.classList.remove('state-center', 'state-left');
+        v.classList.add('state-right');
+      }
+    });
     if (loginView) {
       loginView.classList.remove('state-left');
       loginView.classList.add('state-center');

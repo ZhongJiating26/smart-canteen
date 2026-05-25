@@ -178,7 +178,7 @@
         <div class="screen-content scrollable menu-content">
           <!-- Promo Banner Card -->
           <div class="promo-banner">
-            <h2 class="promo-title">Hungry, Alex?</h2>
+            <h2 class="promo-title" id="promo-greeting">Hungry, Alex?</h2>
             <p class="promo-desc">Find your favorite campus stall and skip the queue.</p>
             <div class="promo-chips">
               <span class="promo-chip">
@@ -778,7 +778,151 @@
           <!-- Dynamically populated in main.js -->
         </div>
 
+      </div>
 
+      <!-- ================= USER PROFILE SCREEN ================= -->
+      <div id="profile-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header">
+          <span class="brand-title">Campus Eats</span>
+        </header>
+
+        <!-- Scrollable Profile Content -->
+        <div class="profile-scroll-container">
+          <!-- Profile Card -->
+          <div class="profile-card">
+            <div class="profile-avatar-wrapper">
+              <img class="profile-avatar" id="profile-avatar-img" src="/images/profile_avatar.png" alt="Profile Avatar" />
+              <div class="profile-verified-badge">
+                <span class="material-symbols-outlined">check</span>
+              </div>
+            </div>
+            <h2 class="profile-name" id="profile-display-name">Alex Thompson</h2>
+            <div class="profile-info-row">
+              <span class="material-symbols-outlined profile-info-icon">phone</span>
+              <span class="profile-info-text" id="profile-display-phone">+1 (555) 902-4431</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="material-symbols-outlined profile-info-icon">badge</span>
+              <span class="profile-info-text" id="profile-display-student-id">ID: STU-882910</span>
+            </div>
+            <button type="button" class="profile-edit-btn" id="btn-edit-profile">
+              <span class="material-symbols-outlined">edit</span>
+              <span>Edit Profile</span>
+            </button>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="profile-stats-row">
+            <div class="profile-stat-card">
+              <span class="profile-stat-number">12</span>
+              <span class="profile-stat-label">Orders</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="profile-stat-number">$142</span>
+              <span class="profile-stat-label">Spent</span>
+            </div>
+          </div>
+
+          <!-- Account Settings Block -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">Account Settings</h3>
+            
+            <div class="settings-list">
+              <!-- Settings Row -->
+              <div class="settings-item clickable" id="btn-settings-opt">
+                <div class="settings-item-left">
+                  <div class="settings-icon-wrapper">
+                    <span class="material-symbols-outlined">settings</span>
+                  </div>
+                  <div class="settings-item-text">
+                    <span class="settings-item-title">Settings</span>
+                    <span class="settings-item-subtitle">App preferences and privacy</span>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined settings-chevron">chevron_right</span>
+              </div>
+
+              <!-- Help Row -->
+              <div class="settings-item clickable" id="btn-help-opt">
+                <div class="settings-item-left">
+                  <div class="settings-icon-wrapper">
+                    <span class="material-symbols-outlined">help</span>
+                  </div>
+                  <div class="settings-item-text">
+                    <span class="settings-item-title">Help & Support</span>
+                    <span class="settings-item-subtitle">FAQs and contact support</span>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined settings-chevron">chevron_right</span>
+              </div>
+
+              <!-- Logout Row -->
+              <div class="settings-item clickable" id="btn-logout-opt">
+                <div class="settings-item-left">
+                  <div class="settings-icon-wrapper logout-icon-wrapper">
+                    <span class="material-symbols-outlined">logout</span>
+                  </div>
+                  <div class="settings-item-text">
+                    <span class="settings-item-title logout-title">Logout</span>
+                    <span class="settings-item-subtitle">Sign out of your account</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= EDIT PROFILE SCREEN ================= -->
+      <div id="edit-profile-view" class="mobile-screen state-right">
+        <!-- Top Navigation -->
+        <header class="screen-header justify-between" style="justify-content: space-between; align-items: center; width: 100%;">
+          <span class="material-symbols-outlined header-icon clickable" id="edit-profile-back" style="color: var(--color-brand-rust); font-size: 1.6rem; cursor: pointer; padding: 4px;">arrow_back</span>
+          <span class="screen-title" style="font-weight: 700; font-size: 1.15rem; color: var(--color-text-primary);">Edit Profile</span>
+          <span style="width: 24px;"></span>
+        </header>
+
+        <!-- Scrollable Form Content -->
+        <div class="edit-profile-scroll-container">
+          <!-- Avatar Preview Block -->
+          <div class="edit-avatar-section">
+            <input type="file" id="edit-avatar-input" accept="image/*" style="display: none;" />
+            <div class="edit-avatar-wrapper clickable" id="btn-change-avatar">
+              <img class="edit-avatar" id="edit-avatar-preview" src="/images/profile_avatar.png" alt="Profile Avatar" />
+              <div class="edit-avatar-badge">
+                <span class="material-symbols-outlined">camera_alt</span>
+              </div>
+            </div>
+            <span class="edit-avatar-label">Tap to change avatar</span>
+          </div>
+
+          <!-- Fields Form -->
+          <div class="edit-profile-card">
+            <div class="edit-form-group">
+              <md-outlined-text-field id="edit-nickname" label="Nickname" required style="width: 100%;"></md-outlined-text-field>
+            </div>
+            
+            <div class="edit-form-group">
+              <md-outlined-text-field id="edit-student-id" label="Student/Staff ID" style="width: 100%;"></md-outlined-text-field>
+            </div>
+            
+            <div class="edit-form-group">
+              <md-outlined-text-field id="edit-phone" label="Phone Number" type="tel" required style="width: 100%;"></md-outlined-text-field>
+            </div>
+
+            <!-- Verification Code Row (hidden by default) -->
+            <div class="verification-row edit-code-row hidden" id="edit-verification-row" style="margin-top: 12px; display: flex; align-items: center; gap: 12px;">
+              <md-outlined-text-field id="edit-verification-code" label="Verification Code" style="flex-grow: 1;" placeholder="6-digit code"></md-outlined-text-field>
+              <button type="button" class="btn-send-code inline-btn" id="btn-edit-send-code" style="height: 56px; margin: 0;">Send Code</button>
+            </div>
+          </div>
+
+          <!-- Bottom Save Actions -->
+          <div class="edit-profile-actions">
+            <button type="button" class="btn-primary" id="btn-save-profile">Save Changes</button>
+          </div>
+        </div>
       </div>
 
       <!-- ================= ORDER DETAILS SCREEN ================= -->
@@ -941,6 +1085,40 @@
             <span class="material-symbols-outlined">person</span>
           </div>
           <span class="nav-label">Profile</span>
+        </div>
+      </div>
+
+      <!-- ================= LOGOUT CONFIRM DIALOG ================= -->
+      <div id="logout-dialog-scrim" class="dialog-scrim"></div>
+      <div id="logout-dialog" class="m3-dialog">
+        <h3 class="m3-dialog-title">Log out?</h3>
+        <p class="m3-dialog-content">Are you sure you want to log out of your account?</p>
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-logout-cancel">Cancel</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-logout-confirm">Log out</button>
+        </div>
+      </div>
+
+      <!-- ================= AVATAR PICKER DIALOG ================= -->
+      <div id="avatar-picker-scrim" class="dialog-scrim"></div>
+      <div id="avatar-picker-dialog" class="m3-dialog">
+        <h3 class="m3-dialog-title">Select Avatar</h3>
+        <p class="m3-dialog-content" style="margin-bottom: 16px;">Choose a preset portrait for your profile.</p>
+        
+        <div class="avatar-presets-grid" style="display: flex; justify-content: space-around; gap: 12px; margin-bottom: 20px;">
+          <div class="avatar-preset-item active" data-index="0" style="position: relative; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; border: 3px solid var(--color-brand-rust); box-sizing: border-box; overflow: hidden; transition: all 0.2s;">
+            <img src="/images/profile_avatar.png" alt="Preset 1" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <div class="avatar-preset-item" data-index="1" style="position: relative; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-sizing: border-box; overflow: hidden; transition: all 0.2s;">
+            <img src="/images/profile_avatar_2.png" alt="Preset 2" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <div class="avatar-preset-item" data-index="2" style="position: relative; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-sizing: border-box; overflow: hidden; transition: all 0.2s;">
+            <img src="/images/profile_avatar_3.png" alt="Preset 3" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+        </div>
+
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-avatar-picker-cancel">Cancel</button>
         </div>
       </div>
 
