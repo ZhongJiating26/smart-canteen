@@ -32,6 +32,11 @@ seata:
       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
 
 canteen:
+  rocketmq:
+    broker-override:
+      broker-name: ${ROCKETMQ_BROKER_A_NAME:broker-a}
+      broker-addr: ${ROCKETMQ_BROKER_A_ADDR:${BROKER_A_ADDR:}}
+      refresh-ms: ${ROCKETMQ_BROKER_OVERRIDE_REFRESH_MS:5000}
   order:
     timeout:
       topic: ${ORDER_TIMEOUT_TOPIC:order-timeout}

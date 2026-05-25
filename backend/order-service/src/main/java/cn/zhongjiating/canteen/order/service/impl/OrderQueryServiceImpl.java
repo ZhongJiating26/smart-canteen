@@ -13,6 +13,7 @@ import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderItem;
 import cn.zhongjiating.canteen.order.entity.OrderStatusLog;
 import cn.zhongjiating.canteen.order.feign.MenuFeignClient;
+import cn.zhongjiating.canteen.order.feign.RemoteResultErrors;
 import cn.zhongjiating.canteen.order.mapper.OrderItemMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderStatusLogMapper;
@@ -149,8 +150,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         }
         Result<MerchantLookupResponse> result = menuFeignClient.merchantByUserId(context.getUserId());
         if (result == null || result.getCode() == null || result.getCode() != 200 || result.getData() == null) {
-            String message = result == null || !hasText(result.getMessage()) ? "商家信息查询失败" : result.getMessage();
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+            throw RemoteResultErrors.toBusinessException(result, "商家信息查询失败");
         }
         MerchantLookupResponse merchant = result.getData();
         if (merchant.status() == null || merchant.status() != 1) {

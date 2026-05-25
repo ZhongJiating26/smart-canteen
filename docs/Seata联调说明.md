@@ -12,7 +12,7 @@
 基础组件使用 `deploy/docker-compose/compose.yaml`：
 
 ```bash
-docker compose -f deploy/docker-compose/compose.yaml up -d mysql redis nacos rocketmq-namesrv rocketmq-broker rocketmq-init seata
+docker compose -f deploy/docker-compose/compose.yaml up -d mysql redis nacos rocketmq-namesrv rocketmq-broker seata
 ```
 
 服务启动时打开 Seata：
@@ -30,18 +30,18 @@ export REDIS_PASSWORD=root123456
 export SEATA_ENABLED=true
 export SEATA_SERVER_ADDR=127.0.0.1:8191
 export ROCKETMQ_NAME_SERVER=127.0.0.1:9176
-export ROCKETMQ_BROKER_IP=127.0.0.1
-export ROCKETMQ_BROKER_PORT=11911
-export ROCKETMQ_BROKER_HA_PORT=11909
+export ROCKETMQ_BROKER_A_ADDR=127.0.0.1:11911
 export ROCKETMQ_TOPICS=order-timeout
 ```
+
+`ROCKETMQ_BROKER_A_ADDR` 用于本地开发时覆盖 RocketMQ NameServer 返回的 Docker 内网 broker 地址；不设置时，客户端仍使用 NameServer 返回的原始地址。
 
 按顺序启动：
 
 ```bash
 cd backend
-./menu-service/mvnw -q -f pom.xml -pl menu-service -am spring-boot:run
-./order-service/mvnw -q -f pom.xml -pl order-service -am spring-boot:run
+mvn -q -pl menu-service -am spring-boot:run
+mvn -q -pl order-service -am spring-boot:run
 ```
 
 ## 正常提交验证

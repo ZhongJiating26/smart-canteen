@@ -3,9 +3,13 @@ package cn.zhongjiating.canteen.pickup.controller;
 import cn.zhongjiating.canteen.common.context.UserContext;
 import cn.zhongjiating.canteen.common.context.UserContextHolder;
 import cn.zhongjiating.canteen.common.dto.Result;
+import cn.zhongjiating.canteen.common.enums.ErrorCode;
+import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.common.exception.ForbiddenException;
 import cn.zhongjiating.canteen.pickup.dto.CallPickupRequest;
+import cn.zhongjiating.canteen.pickup.dto.MerchantLookupResponse;
 import cn.zhongjiating.canteen.pickup.dto.VerifyPickupRequest;
+import cn.zhongjiating.canteen.pickup.feign.MenuFeignClient;
 import cn.zhongjiating.canteen.pickup.service.PickupQueueService;
 import cn.zhongjiating.canteen.pickup.service.VerifyPickupService;
 import cn.zhongjiating.canteen.pickup.vo.QrcodeVO;
@@ -30,10 +34,13 @@ public class PickupController {
 
     private final PickupQueueService pickupQueueService;
     private final VerifyPickupService verifyPickupService;
+    private final MenuFeignClient menuFeignClient;
 
-    public PickupController(PickupQueueService pickupQueueService, VerifyPickupService verifyPickupService) {
+    public PickupController(PickupQueueService pickupQueueService, VerifyPickupService verifyPickupService,
+                            MenuFeignClient menuFeignClient) {
         this.pickupQueueService = pickupQueueService;
         this.verifyPickupService = verifyPickupService;
+        this.menuFeignClient = menuFeignClient;
     }
 
     @Operation(summary = "查询制作中队列")
@@ -91,8 +98,15 @@ public class PickupController {
 
     private UserContext requireMerchant(Long merchantId) {
         UserContext context = UserContextHolder.require();
-        if (!context.isMerchant() || !context.getUserId().equals(merchantId)) {
+        if (!context.isMerchant()) {
             throw new ForbiddenException();
+        }
+        Result<MerchantLookupResponse> result = menuFeignClient.merchantByUserId(context.getUserId());
+        if (result == null || result.getCode() == null || result.getCode() != 200 || result.getData() == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "商家窗口身份查询失败");
+        }
+        if (!merchantId.equals(result.getData().merchantId())) {
+            throw new ForbiddenException("无权操作该商家窗口");
         }
         return context;
     }

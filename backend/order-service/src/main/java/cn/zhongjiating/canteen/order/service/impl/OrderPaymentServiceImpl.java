@@ -14,6 +14,7 @@ import cn.zhongjiating.canteen.order.dto.PayPasswordVerifyResponse;
 import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderConfig;
 import cn.zhongjiating.canteen.order.entity.OrderStatusLog;
+import cn.zhongjiating.canteen.order.feign.RemoteResultErrors;
 import cn.zhongjiating.canteen.order.feign.UserFeignClient;
 import cn.zhongjiating.canteen.order.mapper.OrderConfigMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderMapper;
@@ -82,9 +83,7 @@ public class OrderPaymentServiceImpl implements OrderPaymentService {
         Result<PayPasswordVerifyResponse> result = userFeignClient.verifyPayPassword(
                 new PayPasswordVerifyRequest(userId, payPassword));
         if (result == null || result.getCode() == null || result.getCode() != 200 || result.getData() == null) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
-                    result == null || result.getMessage() == null || result.getMessage().isBlank()
-                            ? "支付密码验证失败" : result.getMessage());
+            throw RemoteResultErrors.toBusinessException(result, "支付密码验证失败");
         }
         if (!result.getData().valid()) {
             throw new BusinessException(ErrorCode.PAY_PASSWORD_ERROR);

@@ -15,13 +15,16 @@ public class RocketMqOrderTimeoutMessagePublisher implements OrderTimeoutMessage
     public static final String ACCEPT_TIMEOUT = "accept_timeout";
 
     private final RocketMQTemplate rocketMQTemplate;
+    private final RocketMqBrokerAddressOverride brokerAddressOverride;
     private final String topic;
     private final int delayLevel;
 
     public RocketMqOrderTimeoutMessagePublisher(RocketMQTemplate rocketMQTemplate,
+                                                RocketMqBrokerAddressOverride brokerAddressOverride,
                                                 @Value("${canteen.order.timeout.topic:order-timeout}") String topic,
                                                 @Value("${canteen.order.timeout.delay-level:14}") int delayLevel) {
         this.rocketMQTemplate = rocketMQTemplate;
+        this.brokerAddressOverride = brokerAddressOverride;
         this.topic = topic;
         this.delayLevel = delayLevel;
     }
@@ -39,8 +42,17 @@ public class RocketMqOrderTimeoutMessagePublisher implements OrderTimeoutMessage
     private void publish(Order order, String timeoutType) {
         OrderTimeoutMessage payload = new OrderTimeoutMessage(order.getId(), order.getOrderNo(),
                 timeoutType, LocalDateTime.now());
-        rocketMQTemplate.syncSend(destination(timeoutType), MessageBuilder.withPayload(payload).build(),
-                3000L, delayLevel);
+        String destination = destination(timeoutType);
+        brokerAddressOverride.prepareTopicRoute(rocketMQTemplate.getProducer(), topic);
+        try {
+            rocketMQTemplate.syncSend(destination, MessageBuilder.withPayload(payload).build(), 3000L, delayLevel);
+        } catch (RuntimeException ex) {
+            if (!brokerAddressOverride.enabled()) {
+                throw ex;
+            }
+            brokerAddressOverride.overrideIfConfigured();
+            rocketMQTemplate.syncSend(destination, MessageBuilder.withPayload(payload).build(), 3000L, delayLevel);
+        }
     }
 
     private String destination(String tag) {

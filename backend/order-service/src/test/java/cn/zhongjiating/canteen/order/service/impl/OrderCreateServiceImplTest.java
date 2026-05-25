@@ -3,7 +3,9 @@ package cn.zhongjiating.canteen.order.service.impl;
 import cn.zhongjiating.canteen.common.context.UserContext;
 import cn.zhongjiating.canteen.common.context.UserContextHolder;
 import cn.zhongjiating.canteen.common.dto.Result;
+import cn.zhongjiating.canteen.common.enums.ErrorCode;
 import cn.zhongjiating.canteen.common.enums.RoleEnum;
+import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.common.exception.ForbiddenException;
 import cn.zhongjiating.canteen.order.dto.CreateOrderItemRequest;
 import cn.zhongjiating.canteen.order.dto.CreateOrderRequest;
@@ -98,6 +100,21 @@ class OrderCreateServiceImplTest {
         verify(menuFeignClient, never()).reserve(any());
         verify(timeoutMessagePublisher, never()).publishPayTimeout(any());
         verify(orderItemMapper, never()).insert(any(OrderItem.class));
+    }
+
+    @Test
+    void createPropagatesInventoryBusinessFailure() {
+        UserContextHolder.set(UserContext.of(1000001L, "user", RoleEnum.USER));
+        when(orderIdempotencyService.findExistingOrderId(eq(1000001L), eq("key-1"), any())).thenReturn(null);
+        when(menuFeignClient.snapshot(any())).thenReturn(Result.success(snapshot()));
+        when(menuFeignClient.reserve(any())).thenReturn(Result.error(ErrorCode.INVALID_STOCK));
+
+        assertThatThrownBy(() -> service().create("key-1", request()))
+                .isInstanceOfSatisfying(BusinessException.class, ex -> {
+                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.INVALID_STOCK);
+                    assertThat(ex.getMessage()).isEqualTo("库存不足");
+                });
+        verify(timeoutMessagePublisher, never()).publishPayTimeout(any());
     }
 
     @Test

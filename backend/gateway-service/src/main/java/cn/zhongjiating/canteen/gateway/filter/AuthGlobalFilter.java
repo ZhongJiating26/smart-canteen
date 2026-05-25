@@ -42,7 +42,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             Endpoint.post("/api/user/refresh"),
             Endpoint.get("/api/menu/available"),
             Endpoint.get("/api/menu/categories"),
-            Endpoint.get("/api/menu/dishes/**"),
+            Endpoint.get("/api/menu/dishes/*"),
             Endpoint.get("/api/pickup/preparing/**"),
             Endpoint.get("/api/pickup/waiting/**"),
             Endpoint.get("/api/pickup/snapshot/**")
@@ -50,6 +50,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private static final List<RoleRule> ROLE_RULES = List.of(
             new RoleRule("/api/admin/**", RoleEnum.ADMIN),
             new RoleRule("/api/order/merchant/**", RoleEnum.MERCHANT),
+            new RoleRule("/api/menu/merchant/**", RoleEnum.MERCHANT),
             new RoleRule("/api/menu/daily-menus/**", RoleEnum.MERCHANT),
             new RoleRule("/api/menu/inventory/**", RoleEnum.MERCHANT),
             new RoleRule("/api/menu/categories/**", RoleEnum.MERCHANT),

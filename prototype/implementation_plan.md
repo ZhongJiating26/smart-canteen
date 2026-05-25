@@ -1,59 +1,61 @@
-# Implementation Plan - Stall Selection Page & Dishes Detail View
+# Implementation Plan - User Profile Page (Personal Center)
 
-We will redesign the post-login canteen landing screen to match the official **Stall Selection Page (菜单-档口选择页)** screenshot, utilizing the warm orange/rust color scheme and Material 3 design specs. We will also add a secondary dishes view that slides in when a stall is tapped.
+We will build the User Profile page (`#profile-view`) based on `pictures/用户端 - 个人中心页.png`, using Material 3 style cards, lists, and layout design tokens.
 
 ---
 
 ## Proposed Changes
 
-### [canteen-prototype Component](file:///Users/zhongjiating/Projects/smart-canteen/prototype/canteen-prototype)
+### canteen-prototype
 
 #### [MODIFY] [index.html](file:///Users/zhongjiating/Projects/smart-canteen/prototype/canteen-prototype/index.html)
-- **Modify `#menu-view` to represent Stall Selection**:
-  - **Header**: Left-aligned "Campus Eats" brand title (Georgia brand font, rust color).
-  - **Promo Banner**: Card showing "Hungry, Alex? Find your favorite campus stall and skip the queue." with a background of our high-fidelity generated `/images/banner_bg.png` and two pill chips: "Popular Now" (flame icon) and "Fast Pickup" (timer icon).
-  - **Search Bar**: Search bar input field with leading search icon and trailing `tune` filter icon.
-  - **Category Chips**: Scrollable row of outlined filter chips: "All Stalls" (grid icon), "Noodles" (soup kitchen icon), "Western" (lunch dining icon).
-  - **Stall Cards List**: Outlined cards for:
-    - **Noodle House** (Asian Cuisine, 920+ Sales, 20 orders in progress)
-    - **Western Grill** (Gourmet Burgers, 450+ Sales, 8 orders in progress)
-    - **Healthy Bowls** (Salads & Drinks, 680+ Sales, 5 orders in progress)
-  - **Bottom Navigation Bar**: Fixed at the bottom containing 3 tabs to match the screenshot:
-    - **Menu** (Active, fork/knife icon `restaurant` in a peach pill indicator)
-    - **Orders** (Receipt icon `receipt`)
-    - **Profile** (Person icon `person`)
-- **Add `#dishes-view` for Stall Menu Details**:
-  - Hidden by default (`state-right`). Slides in from the right when a stall card is tapped.
-  - **Header**: Back arrow (`arrow_back`), dynamic stall name title, and a Shopping Cart icon with a red notification count badge.
-  - **Dish Cards List**: Displays the specific food items corresponding to the selected stall. Clicking the "+" add button increments the header cart badge and triggers a toast notification.
+- **Profile Screen (`#profile-view`)**: Add a new screen container `.mobile-screen.state-right` (as a sibling to `#orders-view`).
+  - **Header**: Left-aligned brand title "Campus Eats" and a top-right clickable notification bell icon (`notifications`).
+  - **Scroll Area (`.profile-scroll-container`)**:
+    - **Profile Card**: Contains a circular avatar of Alex Thompson (`/images/profile_avatar.png`), a verified checkmark badge (`check`), nickname, phone, and student ID. Below the info, include an "Edit Profile" filled button with an edit icon (`edit`).
+    - **Stats Flex Row**: Includes two cards side-by-side:
+      - Left card: "12 Orders" (with the number "12" styled in rust/orange).
+      - Right card: "$142 Spent" (with "$142" styled in rust/orange).
+    - **Account Settings Card**: Styled block with section title "Account Settings", containing list items:
+      - *Settings* (Icon: `settings`, Title: "Settings", Description: "App preferences and privacy", Trailing: `chevron_right`).
+      - *Help & Support* (Icon: `help`, Title: "Help & Support", Description: "FAQs and contact support", Trailing: `chevron_right`).
+      - *Logout* (Icon: `logout`, Title: "Logout" (reddish), Description: "Sign out of your account", no trailing chevron).
 
 #### [MODIFY] [src/style.css](file:///Users/zhongjiating/Projects/smart-canteen/prototype/canteen-prototype/src/style.css)
-- **Promo Banner Styling**: Set background image, background overlay blend, text coloring, and align pill chips.
-- **Search Bar**: Ensure trailing filter icon alignment and spacing inside `<md-outlined-text-field>`.
-- **Stall Cards (`.stall-card`)**: Flex layout matching the mockup card with rounded corners, left stall photo, middle text details, and right-aligned tags (pink/beige sales badge and solid beige queue indicator).
-- **Bottom Navigation Tabs**: Update spacing, colors, and layout to match the three-tab design in the screenshot.
-- **Dishes View layout**: Support horizontal slide transition class states (`.state-left`, `.state-center`, `.state-right`).
+- **Scroll Container**: Add `.profile-scroll-container` with vertical scrolling and `padding-bottom: 96px;` to clear the persistent bottom navigation bar.
+- **Profile Card Layout**: Style the top card with a beautiful linear gradient from `--color-brand-peach` to a soft transparent hue, rounded corners (`28px`), and centered items.
+- **Verified Badge**: Style the verified checkmark bubble overlay on the bottom right of the circular avatar.
+- **Edit Button**: Style the filled brown/orange pill button (`var(--color-brand-rust)`) with white text and icon.
+- **Stats Cards**: Style the side-by-side cards with `flex: 1`, background `var(--color-bg-card)`, and custom typography.
+- **Account Settings Block**: Style the card wrapper, the section heading, and list items using standard Material 3 styles (left circle icon backdrops, title/subtitle flex vertical stacks, right chevrons, hover effects, and a special pink/red backdrop for the logout icon).
 
 #### [MODIFY] [src/main.js](file:///Users/zhongjiating/Projects/smart-canteen/prototype/canteen-prototype/src/main.js)
-- Bind events for:
-  - **Stall Category Filtering**: Clicking category chips filters the stall list nodes.
-  - **Stall Search**: Typing filters the stall list by name or cuisine type.
-  - **Stall Card Tapping**: Tapping a stall card triggers the sliding transition of `#dishes-view` to `.state-center` and updates its header title and filters dishes matching that stall.
-  - **Dishes Back Arrow**: Slides the dishes view out to `.state-right` to return to the stall selection page.
-  - **Dishes Cart Icon / Add-to-Cart**: Increases cart badge count and displays toasts.
-  - **Bottom Navigation / Logout**: Swapping bottom tabs; clicking the Profile tab triggers the logout flow back to `#login-view`.
+- **DOM Selection**: Select `#profile-view` and its interactive elements.
+- **Navigation Controls**:
+  - Update `setupViewNavigation()` to handle bottom nav tab clicks:
+    - Click "Profile" -> Slide `#profile-view` to `state-center`. Slide other views (`menuView`, `ordersView`, etc.) to `state-left`.
+    - Click "Menu" -> Slide `#menu-view` to `state-center`. Slide `ordersView` and `profileView` to `state-right`.
+    - Click "Orders" -> Slide `#orders-view` to `state-center`. Slide `menuView` to `state-left`, and `profileView` to `state-right`.
+    - Correctly call `syncBottomNavActiveTab` for the profile page.
+- **Click Triggers**:
+  - Bind a click listener on the "Logout" list item inside the settings card to trigger `handleLogout()`.
+  - Bind toast notifications to "Edit Profile", "Settings", "Help & Support", and the notification bell.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-- Run `npm run build` to confirm Vite compilation works cleanly.
+- Run `npm run build` to verify production compilation.
 
 ### Manual Verification
-- Log in and verify that the Landing page is the Stall Selection page matching the screenshot.
-- Test category filtering (e.g. clicking "Noodles" filters out Western Grill).
-- Click "Noodle House" to slide in the Dishes list. Confirm title updates to "Noodle House".
-- Add items to cart and check that the cart count badge on the header increases.
-- Click the back arrow to slide back to the stalls list.
-- Click "Profile" on the bottom navigation and verify the logout flow.
+1. **Interactive Navigation**:
+   - Log in, click the bottom "Profile" tab: verify the view transitions in from the right.
+   - Click "Menu" or "Orders" tabs: verify the profile view slides out smoothly.
+2. **Profile Layout & Aesthetics**:
+   - Verify that the card matches the image, featuring a circular avatar, student details, and an Edit Profile button.
+   - Verify the stats block shows "12 Orders" and "$142 Spent".
+   - Verify list items for Settings, Help, and Logout are styled with custom icon containers.
+3. **Actions & Triggers**:
+   - Click "Logout": verify the application logs out successfully and returns to the login screen.
+   - Click "Settings", "Help & Support", and "Edit Profile": verify descriptive toast notifications appear.

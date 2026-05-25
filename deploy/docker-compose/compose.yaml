@@ -9,7 +9,7 @@ services:
       - "3106:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ../sql:/docker-entrypoint-initdb.d:ro
+      - ./mysql/init:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -55,49 +55,12 @@ services:
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
       JAVA_OPT_EXT: "-Xms512m -Xmx768m -Xmn256m"
-      ROCKETMQ_BROKER_ADDR: ${ROCKETMQ_BROKER_ADDR:-rocketmq-broker}
-      ROCKETMQ_BROKER_PORT: ${ROCKETMQ_BROKER_PORT:-10911}
-      ROCKETMQ_BROKER_HA_PORT: ${ROCKETMQ_BROKER_HA_PORT:-10909}
-    command: |
-      sh -c 'cat > /tmp/broker.conf <<EOF
-      brokerClusterName=DefaultCluster
-      brokerName=broker-a
-      brokerId=0
-      brokerIP1=$${ROCKETMQ_BROKER_ADDR:-rocketmq-broker}
-      listenPort=$${ROCKETMQ_BROKER_PORT:-10911}
-      haListenPort=$${ROCKETMQ_BROKER_HA_PORT:-10909}
-      autoCreateTopicEnable=true
-      EOF
-      exec sh mqbroker -c /tmp/broker.conf -n "$${NAMESRV_ADDR}" --enable-proxy'
+    command: sh mqbroker -n rocketmq-namesrv:9876 --enable-proxy
     ports:
-      - "${ROCKETMQ_BROKER_PORT:-10911}:${ROCKETMQ_BROKER_PORT:-10911}"
-      - "${ROCKETMQ_BROKER_HA_PORT:-10909}:${ROCKETMQ_BROKER_HA_PORT:-10909}"
+      - "11911:10911"
+      - "11909:10909"
       - "8181:8081"
     restart: unless-stopped
-
-  rocketmq-init:
-    image: apache/rocketmq:5.2.0
-    container_name: canteen-rocketmq-init
-    depends_on:
-      - rocketmq-namesrv
-      - rocketmq-broker
-    environment:
-      NAMESRV_ADDR: rocketmq-namesrv:9876
-      ROCKETMQ_TOPICS: ${ROCKETMQ_TOPICS:-order-timeout}
-      ROCKETMQ_TOPIC_BROKER_ADDR: rocketmq-broker:${ROCKETMQ_BROKER_PORT:-10911}
-    command: |
-      sh -c 'for i in $$(seq 1 30); do
-        if sh mqadmin clusterList -n "$${NAMESRV_ADDR}" >/dev/null 2>&1; then
-          for topic in $${ROCKETMQ_TOPICS:-order-timeout}; do
-            sh mqadmin updateTopic -n "$${NAMESRV_ADDR}" -b "$${ROCKETMQ_TOPIC_BROKER_ADDR}" -t "$${topic}" || exit 1
-          done
-          exit 0
-        fi
-        sleep 2
-      done
-      echo "RocketMQ broker is not ready, failed to create topics: $${ROCKETMQ_TOPICS:-order-timeout}" >&2
-      exit 1'
-    restart: on-failure
 
   rocketmq-dashboard:
     image: apacherocketmq/rocketmq-dashboard:latest
@@ -121,66 +84,6 @@ services:
     ports:
       - "8191:8091"
       - "7191:7091"
-    restart: unless-stopped
-
-  menu-service:
-    build:
-      context: ../../backend
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: menu-service
-    image: smart-canteen/menu-service:dev
-    container_name: canteen-menu-service
-    depends_on:
-      - mysql
-      - redis
-      - nacos
-      - seata
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root123456
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: root123456
-      NACOS_SERVER_ADDR: nacos:8848
-      SEATA_ENABLED: "true"
-      SEATA_SERVER_ADDR: seata:8091
-    ports:
-      - "9002:9002"
-    restart: unless-stopped
-
-  order-service:
-    build:
-      context: ../../backend
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: order-service
-    image: smart-canteen/order-service:dev
-    container_name: canteen-order-service
-    depends_on:
-      - mysql
-      - redis
-      - nacos
-      - seata
-      - rocketmq-init
-      - menu-service
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root123456
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: root123456
-      NACOS_SERVER_ADDR: nacos:8848
-      SEATA_ENABLED: "true"
-      SEATA_SERVER_ADDR: seata:8091
-      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
-      ORDER_TIMEOUT_TOPIC: ${ROCKETMQ_TOPICS:-order-timeout}
-    ports:
-      - "9003:9003"
     restart: unless-stopped
 
 volumes:

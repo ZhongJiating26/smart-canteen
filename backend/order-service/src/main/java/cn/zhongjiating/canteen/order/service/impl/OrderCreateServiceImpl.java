@@ -20,6 +20,7 @@ import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderConfig;
 import cn.zhongjiating.canteen.order.entity.OrderItem;
 import cn.zhongjiating.canteen.order.feign.MenuFeignClient;
+import cn.zhongjiating.canteen.order.feign.RemoteResultErrors;
 import cn.zhongjiating.canteen.order.mapper.OrderConfigMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderItemMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderMapper;
@@ -217,9 +218,7 @@ public class OrderCreateServiceImpl implements OrderCreateService {
     }
 
     private BusinessException remoteFailure(Result<?> result, String defaultMessage) {
-        String message = result == null || result.getMessage() == null || result.getMessage().isBlank()
-                ? defaultMessage : result.getMessage();
-        return new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+        return RemoteResultErrors.toBusinessException(result, defaultMessage);
     }
 
     private String trimToNull(String value) {

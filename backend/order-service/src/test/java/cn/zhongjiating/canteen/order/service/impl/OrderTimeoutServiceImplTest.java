@@ -1,6 +1,8 @@
 package cn.zhongjiating.canteen.order.service.impl;
 
 import cn.zhongjiating.canteen.common.enums.OrderStatus;
+import cn.zhongjiating.canteen.common.enums.ErrorCode;
+import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderConfig;
 import cn.zhongjiating.canteen.order.mapper.OrderConfigMapper;
@@ -18,6 +20,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -96,6 +99,27 @@ class OrderTimeoutServiceImplTest {
         verify(orderCancelService).cancelExpiredPending(pending);
         verify(orderCancelService).cancelExpiredPaid(paid);
         verify(orderMapper, times(2)).selectList(any());
+    }
+
+    @Test
+    void scanExpiredOrdersContinuesWhenOneOrderCancelFails() {
+        Order failed = order(OrderStatus.PENDING_PAY);
+        failed.setId(8000001L);
+        Order success = order(OrderStatus.PENDING_PAY);
+        success.setId(8000002L);
+        when(orderConfigMapper.selectOne(any()))
+                .thenReturn(config("pay_timeout_minutes", "10"))
+                .thenReturn(config("accept_timeout_minutes", "10"));
+        when(orderMapper.selectList(any()))
+                .thenReturn(List.of(failed, success))
+                .thenReturn(List.of());
+        doThrow(new BusinessException(ErrorCode.INTERNAL_ERROR, "远程服务调用失败"))
+                .when(orderCancelService).cancelExpiredPending(failed);
+
+        service().scanExpiredOrders();
+
+        verify(orderCancelService).cancelExpiredPending(failed);
+        verify(orderCancelService).cancelExpiredPending(success);
     }
 
     private OrderTimeoutServiceImpl service() {

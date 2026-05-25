@@ -77,6 +77,36 @@ class AuthGlobalFilterTest {
     }
 
     @Test
+    void merchantDishListDoesNotUsePublicDishDetailRule() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        when(redisTemplate.hasKey(org.mockito.ArgumentMatchers.anyString())).thenReturn(Mono.just(false));
+        AuthGlobalFilter filter = filter(redisTemplate);
+        String token = JwtUtil.generateAccessToken(SECRET, 1000001L, "student", RoleEnum.USER, Duration.ofHours(1));
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest
+                .get("/api/menu/dishes")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token));
+
+        filter.filter(exchange, chain(new AtomicReference<>())).block();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void currentMerchantEndpointRejectsUserRole() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        when(redisTemplate.hasKey(org.mockito.ArgumentMatchers.anyString())).thenReturn(Mono.just(false));
+        AuthGlobalFilter filter = filter(redisTemplate);
+        String token = JwtUtil.generateAccessToken(SECRET, 1000001L, "student", RoleEnum.USER, Duration.ofHours(1));
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest
+                .get("/api/menu/merchant/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token));
+
+        filter.filter(exchange, chain(new AtomicReference<>())).block();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void blacklistedTokenIsUnauthorized() {
         ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
         when(redisTemplate.hasKey(org.mockito.ArgumentMatchers.anyString())).thenReturn(Mono.just(true));

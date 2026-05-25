@@ -22,6 +22,7 @@ import cn.zhongjiating.canteen.order.entity.OrderItem;
 import cn.zhongjiating.canteen.order.entity.OrderStatusLog;
 import cn.zhongjiating.canteen.order.feign.MenuFeignClient;
 import cn.zhongjiating.canteen.order.feign.PickupFeignClient;
+import cn.zhongjiating.canteen.order.feign.RemoteResultErrors;
 import cn.zhongjiating.canteen.order.mapper.OrderConfigMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderItemMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderMapper;
@@ -223,9 +224,7 @@ public class OrderMerchantServiceImpl implements OrderMerchantService {
     }
 
     private BusinessException remoteFailure(Result<?> result, String defaultMessage) {
-        String message = result == null || result.getMessage() == null || result.getMessage().isBlank()
-                ? defaultMessage : result.getMessage();
-        return new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+        return RemoteResultErrors.toBusinessException(result, defaultMessage);
     }
 
     private record MerchantContext(UserContext user, MerchantLookupResponse merchant, Order order) {

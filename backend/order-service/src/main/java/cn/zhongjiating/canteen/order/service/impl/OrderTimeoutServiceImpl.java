@@ -1,6 +1,7 @@
 package cn.zhongjiating.canteen.order.service.impl;
 
 import cn.zhongjiating.canteen.common.enums.OrderStatus;
+import cn.zhongjiating.canteen.common.exception.BusinessException;
 import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderConfig;
 import cn.zhongjiating.canteen.order.mapper.OrderConfigMapper;
@@ -10,6 +11,8 @@ import cn.zhongjiating.canteen.order.mq.RocketMqOrderTimeoutMessagePublisher;
 import cn.zhongjiating.canteen.order.service.OrderCancelService;
 import cn.zhongjiating.canteen.order.service.OrderTimeoutService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,6 +20,8 @@ import java.util.List;
 
 @Service
 public class OrderTimeoutServiceImpl implements OrderTimeoutService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderTimeoutServiceImpl.class);
 
     private static final int DEFAULT_PAY_TIMEOUT_MINUTES = 10;
     private static final int DEFAULT_ACCEPT_TIMEOUT_MINUTES = 10;
@@ -58,14 +63,30 @@ public class OrderTimeoutServiceImpl implements OrderTimeoutService {
                 .le(Order::getCreateTime, now.minusMinutes(payTimeoutMinutes))
                 .orderByAsc(Order::getCreateTime)
                 .last("LIMIT 100"));
-        pendingOrders.forEach(orderCancelService::cancelExpiredPending);
+        pendingOrders.forEach(this::cancelExpiredPendingQuietly);
 
         List<Order> paidOrders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
                 .eq(Order::getStatus, OrderStatus.PAID.getCode())
                 .le(Order::getPayTime, now.minusMinutes(acceptTimeoutMinutes))
                 .orderByAsc(Order::getPayTime)
                 .last("LIMIT 100"));
-        paidOrders.forEach(orderCancelService::cancelExpiredPaid);
+        paidOrders.forEach(this::cancelExpiredPaidQuietly);
+    }
+
+    private void cancelExpiredPendingQuietly(Order order) {
+        try {
+            orderCancelService.cancelExpiredPending(order);
+        } catch (BusinessException ex) {
+            log.warn("Cancel expired pending order failed, orderId={}, message={}", order.getId(), ex.getMessage());
+        }
+    }
+
+    private void cancelExpiredPaidQuietly(Order order) {
+        try {
+            orderCancelService.cancelExpiredPaid(order);
+        } catch (BusinessException ex) {
+            log.warn("Cancel expired paid order failed, orderId={}, message={}", order.getId(), ex.getMessage());
+        }
     }
 
     private void handlePayTimeout(Order order) {

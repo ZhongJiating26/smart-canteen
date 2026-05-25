@@ -12,6 +12,7 @@ import cn.zhongjiating.canteen.order.entity.Order;
 import cn.zhongjiating.canteen.order.entity.OrderItem;
 import cn.zhongjiating.canteen.order.entity.OrderStatusLog;
 import cn.zhongjiating.canteen.order.feign.MenuFeignClient;
+import cn.zhongjiating.canteen.order.feign.RemoteResultErrors;
 import cn.zhongjiating.canteen.order.mapper.OrderItemMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderMapper;
 import cn.zhongjiating.canteen.order.mapper.OrderStatusLogMapper;
@@ -108,8 +109,6 @@ public class OrderCompleteServiceImpl implements OrderCompleteService {
     }
 
     private BusinessException remoteFailure(Result<?> result, String defaultMessage) {
-        String message = result == null || result.getMessage() == null || result.getMessage().isBlank()
-                ? defaultMessage : result.getMessage();
-        return new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+        return RemoteResultErrors.toBusinessException(result, defaultMessage);
     }
 }
