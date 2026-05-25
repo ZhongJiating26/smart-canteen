@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Eats - TV Display Screen</title>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="/src/screen-style.css" />
+  </head>
+  <body>
+    
+    <!-- ================= MAIN 4K UHD VIEWPORT ================= -->
+    <div class="screen-viewport">
+      
+      <!-- Top Header Area -->
+      <header class="screen-header">
+        <div class="header-left">
+          <h1 class="brand-title">Campus Eats</h1>
+          <span class="header-date" id="clock-date">Monday, 25 May 2026</span>
+        </div>
+
+        <div class="header-right">
+          <!-- Digital Clock Pill -->
+          <div class="time-pill">
+            <span class="clock-time" id="clock-time">17:23:09</span>
+          </div>
+
+          <!-- Live Indicator Pill -->
+          <div class="live-pill" id="connection-pill">
+            <span class="live-dot"></span>
+            <span class="live-text" id="connection-status-label">Live</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Columns Layout -->
+      <main class="columns-layout">
+        
+        <!-- Left Side Column: Preparing -->
+        <section class="queue-column column-preparing">
+          <div class="column-header">
+            <span class="material-symbols-outlined header-icon">restaurant</span>
+            <h2 class="column-title">Preparing</h2>
+            <span class="count-badge badge-muted" id="prep-count-badge">6 Orders</span>
+          </div>
+          
+          <div class="grid-container preparing-grid" id="preparing-list">
+            <!-- Dynamic small cards (2 columns layout) -->
+            <!-- Populated via screen.js -->
+          </div>
+        </section>
+
+        <!-- Right Side Column: Ready for Pickup -->
+        <section class="queue-column column-ready">
+          <div class="column-header">
+            <span class="material-symbols-outlined header-icon">check_circle</span>
+            <h2 class="column-title">Ready for Pickup</h2>
+            <span class="count-badge badge-highlight" id="ready-count-badge">3 Orders Ready</span>
+          </div>
+          
+          <div class="grid-container ready-grid" id="ready-list">
+            <!-- Dynamic large cards (4 columns layout) -->
+            <!-- Populated via screen.js -->
+          </div>
+        </section>
+        
+      </main>
+
+    </div>
+
+    <!-- ================= CENTRAL ANNOUNCEMENT MODAL (CALL NOTIFY) ================= -->
+    <div class="announcement-scrim" id="announcement-overlay">
+      <div class="announcement-card">
+        <span class="material-symbols-outlined bell-icon">notifications</span>
+        <h2 class="announcement-header">Please Collect</h2>
+        
+        <!-- Golden/Peach number card block -->
+        <div class="number-block-container">
+          <span class="announcement-number" id="announcement-number">A005</span>
+        </div>
+        
+        <div class="announcement-stall" id="announcement-stall">Noodle House</div>
+      </div>
+    </div>
+
+    <!-- ================= FLOATING DEVELOPER DEBUG PANEL ================= -->
+    <div class="debug-panel" id="debug-panel">
+      <div class="debug-header">
+        <h3>大屏模拟测试板 (D键开关)</h3>
+        <button type="button" class="debug-close-btn" id="btn-debug-close">&times;</button>
+      </div>
+      <div class="debug-body">
+        
+        <div class="debug-section">
+          <h4>模拟 WebSocket 状态</h4>
+          <div class="debug-buttons-row">
+            <button class="debug-btn" id="btn-dbg-connect">正常连接 WS</button>
+            <button class="debug-btn debug-btn-warn" id="btn-dbg-disconnect">断开并重试</button>
+            <button class="debug-btn debug-btn-danger" id="btn-dbg-fail">模拟降级轮询</button>
+          </div>
+        </div>
+
+        <div class="debug-section">
+          <h4>模拟业务消息广播 (已静音)</h4>
+          <div class="debug-inputs-row">
+            <md-outlined-text-field id="dbg-ticket-num" label="取餐号" value="A008" style="width: 100px;"></md-outlined-text-field>
+            <button class="debug-btn" id="btn-msg-prep">制作更新</button>
+            <button class="debug-btn" id="btn-msg-ready">出餐更新</button>
+            <button class="debug-btn debug-btn-highlight" id="btn-msg-call">呼叫广播</button>
+          </div>
+        </div>
+
+        <div class="debug-section">
+          <h4>辅助动作</h4>
+          <div class="debug-buttons-row">
+            <button class="debug-btn" id="btn-dbg-reset">重置初始数据</button>
+            <button class="debug-btn" id="btn-dbg-clear">清空列表</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="/src/screen.js"></script>
+  </body>
+</html>

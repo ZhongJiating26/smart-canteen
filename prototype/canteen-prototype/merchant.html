@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Eats - Merchant Portal</title>
+    <!-- Outlined Google Fonts & Icons -->
+    <link rel="stylesheet" href="/src/merchant-style.css" />
+  </head>
+  <body>
+    <!-- Center wrapper simulating a landscape tablet viewport (4:3) -->
+    <div class="tablet-shell">
+      
+      <!-- ================= MERCHANT LOGIN SCREEN ================= -->
+      <div id="merchant-login-view" class="tablet-screen active">
+        <div class="login-split-container">
+          <!-- Left Branding Block -->
+          <div class="login-brand-side">
+            <div class="brand-badge">Merchant</div>
+            <h1 class="brand-logo-text">Campus Eats</h1>
+            <p class="brand-tagline">Manage your campus stall orders, dishes, and status in real time.</p>
+            
+            <div class="brand-stats-badges">
+              <div class="stat-badge">
+                <span class="material-symbols-outlined">bolt</span>
+                <span>Instant Sync</span>
+              </div>
+              <div class="stat-badge">
+                <span class="material-symbols-outlined">devices</span>
+                <span>Tablet Native</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Form Block -->
+          <div class="login-form-side">
+            <div class="login-form-wrapper">
+              <h2 class="form-title">Portal Sign In</h2>
+              <p class="form-subtitle">Enter your merchant credentials to manage your stall</p>
+              
+              <!-- Tab Navigation (Password vs Code) -->
+              <div class="merchant-tab-bar">
+                <button type="button" class="merchant-tab active" id="tab-pwd-btn">Password</button>
+                <button type="button" class="merchant-tab" id="tab-code-btn">SMS Code</button>
+              </div>
+
+              <form id="merchant-login-form" class="merchant-form">
+                <!-- Username/Phone input -->
+                <div class="input-group">
+                  <md-outlined-text-field id="login-account" label="Stall ID / Phone" required style="width: 100%;">
+                    <span class="material-symbols-outlined" slot="leading-icon">person</span>
+                  </md-outlined-text-field>
+                </div>
+
+                <!-- Password Input Wrapper -->
+                <div class="input-group" id="pwd-input-wrapper">
+                  <md-outlined-text-field id="login-password" label="Password" type="password" required style="width: 100%;">
+                    <span class="material-symbols-outlined" slot="leading-icon">lock</span>
+                    <span class="material-symbols-outlined eye-toggle clickable" slot="trailing-icon" id="merchant-login-pwd-toggle">visibility</span>
+                  </md-outlined-text-field>
+                </div>
+
+                <!-- Code Input Wrapper (Hidden by default) -->
+                <div class="input-group hidden" id="code-input-wrapper">
+                  <div class="sms-code-row">
+                    <md-outlined-text-field id="login-code" label="Verification Code" style="flex-grow: 1;" placeholder="6-digit code">
+                      <span class="material-symbols-outlined" slot="leading-icon">sms</span>
+                    </md-outlined-text-field>
+                    <button type="button" class="btn-send-code" id="btn-send-sms">Send Code</button>
+                  </div>
+                </div>
+
+                <!-- Action Button -->
+                <button type="submit" class="btn-login-submit" id="btn-submit-login">Sign In</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MERCHANT MAIN DASHBOARD SCREEN ================= -->
+      <div id="merchant-main-view" class="tablet-screen">
+        
+        <!-- Collapsible Navigation Rail -->
+        <nav class="nav-rail collapsed" id="merchant-nav-rail">
+          <!-- Rail Top (Menu toggler & branding) -->
+          <div class="rail-header">
+            <button type="button" class="rail-toggle-btn" id="btn-rail-toggle">
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+            <span class="rail-brand-name">Campus Eats</span>
+          </div>
+
+          <!-- Rail Center Options -->
+          <div class="rail-body">
+            <!-- Order Processing Tab -->
+            <div class="rail-item active" data-view="view-orders">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined">pending_actions</span>
+              </div>
+              <span class="rail-label">订单处理</span>
+              <span class="badge-dot" id="orders-badge-dot"></span>
+            </div>
+
+            <!-- Dish Management Tab -->
+            <div class="rail-item" data-view="view-dishes">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined">restaurant_menu</span>
+              </div>
+              <span class="rail-label">菜品管理</span>
+            </div>
+
+            <!-- Daily Menu Tab -->
+            <div class="rail-item" data-view="view-daily-menu">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined">calendar_today</span>
+              </div>
+              <span class="rail-label">每日菜单</span>
+            </div>
+
+            <!-- Order History Tab -->
+            <div class="rail-item" data-view="view-history">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined">history</span>
+              </div>
+              <span class="rail-label">历史订单</span>
+            </div>
+
+            <!-- Store Info Tab -->
+            <div class="rail-item" data-view="view-store">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined">store</span>
+              </div>
+              <span class="rail-label">店铺信息</span>
+            </div>
+          </div>
+
+          <!-- Rail Bottom Logout -->
+          <div class="rail-footer">
+            <div class="rail-item logout-item" id="btn-merchant-logout">
+              <div class="rail-icon-wrapper">
+                <span class="material-symbols-outlined text-error">logout</span>
+              </div>
+              <span class="rail-label text-error">Logout</span>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Right Hand Workspace Area -->
+        <div class="dashboard-workspace">
+          <!-- Workspace Header -->
+          <header class="workspace-header">
+            <div class="header-left">
+              <h2 class="workspace-title" id="current-view-title">订单处理</h2>
+              <span class="store-status-pill online" id="store-status-badge">Stall Online</span>
+            </div>
+            <div class="header-right">
+              <button type="button" class="btn-scan-verify" id="btn-header-scan">
+                <span class="material-symbols-outlined">qr_code_scanner</span>
+                <span>扫码核销</span>
+              </button>
+            </div>
+          </header>
+
+          <!-- Workspace Scrollable Content -->
+          <div class="workspace-content">
+            
+            <!-- 1. ORDER PROCESSING VIEW -->
+            <div class="workspace-sub-view active" id="view-orders">
+              <!-- Three-column layout for orders -->
+              <div class="orders-columns-container">
+                <!-- Column 1: Pending -->
+                <div class="order-column" id="col-pending">
+                  <div class="column-header">
+                    <span class="column-title">待接单</span>
+                    <span class="column-count-badge" id="badge-pending">0</span>
+                  </div>
+                  <div class="column-cards-list" id="list-pending">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+
+                <!-- Column 2: Preparing -->
+                <div class="order-column" id="col-preparing">
+                  <div class="column-header">
+                    <span class="column-title">制作中</span>
+                    <span class="column-count-badge" id="badge-preparing">0</span>
+                  </div>
+                  <div class="column-cards-list" id="list-preparing">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+
+                <!-- Column 3: Ready -->
+                <div class="order-column" id="col-ready">
+                  <div class="column-header">
+                    <span class="column-title">待取餐</span>
+                    <span class="column-count-badge" id="badge-ready">0</span>
+                  </div>
+                  <div class="column-cards-list" id="list-ready">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. DISH MANAGEMENT VIEW -->
+            <div class="workspace-sub-view" id="view-dishes">
+
+              <!-- Dishes Header Row containing Category Filter and Create Button -->
+              <div class="dishes-header-row">
+                <div class="segmented-button-group" id="dish-category-filter">
+                  <button type="button" class="segmented-button active" data-category="all">
+                    <span>全部</span>
+                  </button>
+                  <button type="button" class="segmented-button" data-category="主食">
+                    <span>主食</span>
+                  </button>
+                  <button type="button" class="segmented-button" data-category="小吃">
+                    <span>小吃</span>
+                  </button>
+                </div>
+                
+                <button type="button" class="btn-create-dish" id="btn-create-new-dish">
+                  <span class="material-symbols-outlined">add</span>
+                  <span>创建新菜品</span>
+                </button>
+              </div>
+
+              <!-- Dishes Two-Column Workspace Layout -->
+              <div class="dishes-workspace-layout">
+                <!-- Left: Dishes List (M3 List in Card) -->
+                <div class="dishes-list-column">
+                  <div class="m3-list-card" id="merchant-dishes-list">
+                    <!-- Dynamically Populated List Items -->
+                  </div>
+                </div>
+                
+                <!-- Right: Dish Detail and Editor Panel -->
+                <div class="dishes-detail-column">
+                  <div class="dish-detail-card" id="dish-detail-editor-panel">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2b. DAILY MENU VIEW -->
+            <div class="workspace-sub-view" id="view-daily-menu">
+
+              <!-- Daily Menu Header Row containing Category Filter and Add Button -->
+              <div class="dishes-header-row" style="margin-bottom: 20px;">
+                <div class="segmented-button-group" id="daily-menu-category-filter">
+                  <!-- Dynamically Populated Filters -->
+                </div>
+                
+                <button type="button" class="btn-create-dish" id="btn-add-daily-menu-dish" style="background-color: var(--color-brand-rust); color: white;">
+                  <span class="material-symbols-outlined">add</span>
+                  <span>添加菜品</span>
+                </button>
+              </div>
+
+              <!-- Two-Column Workspace Layout -->
+              <div class="dishes-workspace-layout">
+                <!-- Left: Daily Dishes List (M3 List in Card) -->
+                <div class="dishes-list-column">
+                  <div class="m3-list-card" id="merchant-daily-dishes-list">
+                    <!-- Dynamically Populated List Items -->
+                  </div>
+                </div>
+                
+                <!-- Right: Daily Dish Detail Panel -->
+                <div class="dishes-detail-column">
+                  <div class="dish-detail-card" id="daily-dish-detail-panel">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. ORDER HISTORY VIEW -->
+            <div class="workspace-sub-view" id="view-history">
+
+              <!-- History Orders Table/List -->
+              <div class="history-list-wrapper">
+                <div class="history-table-header">
+                  <span>Order ID</span>
+                  <span>Customer</span>
+                  <span>Items</span>
+                  <span>Total Price</span>
+                  <span>Complete Time</span>
+                  <span>Status</span>
+                </div>
+                <div class="history-items-container" id="merchant-history-container">
+                  <!-- Dynamically Populated History Items -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. STORE INFORMATION VIEW -->
+            <div class="workspace-sub-view" id="view-store">
+
+              <!-- Store Settings Form Card -->
+              <div class="store-config-card">
+                <div class="config-row">
+                  <div class="config-info">
+                    <span class="config-label">Operating Status</span>
+                    <span class="config-desc">Toggle to open or close the kitchen for online ordering</span>
+                  </div>
+                  <div class="config-action">
+                    <md-switch id="config-store-toggle" selected></md-switch>
+                  </div>
+                </div>
+
+                <div class="config-divider"></div>
+
+                <div class="config-fields-grid">
+                  <div class="config-field">
+                    <md-outlined-text-field id="config-store-name" label="Stall Name" value="Noodle House" style="width: 100%;">
+                      <span class="material-symbols-outlined" slot="leading-icon">store</span>
+                    </md-outlined-text-field>
+                  </div>
+                  <div class="config-field">
+                    <md-outlined-text-field id="config-store-cuisine" label="Cuisine Type" value="Ramen & Dumplings" style="width: 100%;">
+                      <span class="material-symbols-outlined" slot="leading-icon">restaurant</span>
+                    </md-outlined-text-field>
+                  </div>
+                  <div class="config-field">
+                    <md-outlined-text-field id="config-store-hours" label="Operating Hours" value="11:00 AM - 9:30 PM" style="width: 100%;">
+                      <span class="material-symbols-outlined" slot="leading-icon">schedule</span>
+                    </md-outlined-text-field>
+                  </div>
+                  <div class="config-field">
+                    <md-outlined-text-field id="config-store-phone" label="Contact Hotline" value="+1 (555) 309-8812" style="width: 100%;">
+                      <span class="material-symbols-outlined" slot="leading-icon">phone</span>
+                    </md-outlined-text-field>
+                  </div>
+                </div>
+
+                <div class="config-button-row">
+                  <button type="button" class="btn-save-config" id="btn-save-store-config">Save Store Config</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= CREATE DISH DIALOG ================= -->
+      <div id="merchant-create-dish-dialog-scrim" class="dialog-scrim"></div>
+      <div id="merchant-create-dish-dialog" class="m3-dialog" style="max-width: 440px;">
+        <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--color-brand-rust);">add_to_photos</span>
+          <span>创建新菜品</span>
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px; margin: 16px 0;">
+          <md-outlined-text-field id="new-dish-name" label="菜品名称" placeholder="例如: 叉烧拉面" style="width: 100%;"></md-outlined-text-field>
+          <div style="display: flex; gap: 16px;">
+            <md-outlined-text-field id="new-dish-price" label="价格 (元)" placeholder="例如: 12.00" style="flex: 1;"></md-outlined-text-field>
+            <md-outlined-text-field id="new-dish-stock" label="初始库存" placeholder="例如: 50" type="number" style="flex: 1;"></md-outlined-text-field>
+          </div>
+          
+          <div class="dialog-select-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; color: var(--color-text-secondary); font-weight: 500;">菜品分类</label>
+            <div class="merchant-tab-bar" style="margin-bottom: 0;">
+              <button type="button" class="merchant-tab active" id="btn-select-category-main" data-category="主食">主食</button>
+              <button type="button" class="merchant-tab" id="btn-select-category-snack" data-category="小吃">小吃</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-create-dish-cancel">取消</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-create-dish-confirm">确认创建</button>
+        </div>
+      </div>
+
+      <!-- ================= SCAN VERIFY DIALOG ================= -->
+      <div id="merchant-scan-dialog-scrim" class="dialog-scrim"></div>
+      <div id="merchant-scan-dialog" class="m3-dialog" style="max-width: 440px;">
+        <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--color-brand-rust);">qr_code_scanner</span>
+          <span>扫码核销</span>
+        </h3>
+        <p class="m3-dialog-content" style="margin-bottom: 12px;">请将用户手机取餐码放入框内，或在下方手动输入订单号：</p>
+        
+        <!-- Live Camera Viewfinder -->
+        <div id="scan-camera-container">
+          <video id="scan-video" autoplay playsinline></video>
+          <div id="scan-viewfinder-overlay">
+            <div class="viewfinder-corner top-left"></div>
+            <div class="viewfinder-corner top-right"></div>
+            <div class="viewfinder-corner bottom-left"></div>
+            <div class="viewfinder-corner bottom-right"></div>
+            <div class="scan-laser"></div>
+          </div>
+          <div id="scan-camera-placeholder">
+            <span class="material-symbols-outlined">photo_camera</span>
+            <span id="scan-camera-status-text">正在启动摄像头...</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <md-outlined-text-field id="scan-order-id" label="订单号 / 取餐码" placeholder="例如: #1000" style="width: 100%;"></md-outlined-text-field>
+        </div>
+
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-merchant-scan-cancel">取消</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-merchant-scan-confirm">确认核销</button>
+        </div>
+      </div>
+
+      <!-- ================= REJECT CONFIRM DIALOG ================= -->
+      <div id="merchant-reject-dialog-scrim" class="dialog-scrim"></div>
+      <div id="merchant-reject-dialog" class="m3-dialog">
+        <h3 class="m3-dialog-title">Reject Order?</h3>
+        <p class="m3-dialog-content">Are you sure you want to reject this order? This action cannot be undone.</p>
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-merchant-reject-cancel">Cancel</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-merchant-reject-confirm">Confirm Reject</button>
+        </div>
+      </div>
+
+      <!-- ================= LOGOUT DIALOG ================= -->
+      <div id="merchant-logout-dialog-scrim" class="dialog-scrim"></div>
+      <div id="merchant-logout-dialog" class="m3-dialog">
+        <h3 class="m3-dialog-title">Log out?</h3>
+        <p class="m3-dialog-content">Are you sure you want to exit the merchant portal?</p>
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-merchant-logout-cancel">Cancel</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-merchant-logout-confirm">Log out</button>
+        </div>
+      </div>
+
+      <!-- ================= EDIT DISH DIALOG ================= -->
+      <div id="merchant-edit-dish-dialog-scrim" class="dialog-scrim" style="z-index: 1000;"></div>
+      <div id="merchant-edit-dish-dialog" class="m3-dialog" style="max-width: 620px; width: 90%; z-index: 1001; padding: 28px;">
+        <!-- Dynamically rendered edit form in JS -->
+      </div>
+
+      <!-- ================= ADD DAILY MENU DISH DIALOG ================= -->
+      <div id="merchant-add-daily-dish-dialog-scrim" class="dialog-scrim" style="z-index: 1000;"></div>
+      <div id="merchant-add-daily-dish-dialog" class="m3-dialog" style="max-width: 800px; width: 90%; z-index: 1001; padding: 28px; border-radius: 28px;">
+        <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+          <span class="material-symbols-outlined" style="color: var(--color-brand-rust);">add_to_photos</span>
+          <span>添加每日供应菜品</span>
+        </h3>
+        
+        <!-- Big dialog body layout with two columns -->
+        <div style="display: flex; gap: 24px; min-height: 400px; max-height: 500px; overflow: hidden; margin-bottom: 12px;">
+          <!-- Left Column: Category selector and Dish Grid (Scrollable Picker) -->
+          <div style="flex: 1.5; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+            <!-- Category buttons -->
+            <div class="segmented-button-group" id="add-daily-dialog-category-filter" style="flex-wrap: wrap; gap: 8px;">
+              <!-- Dynamically populated categories -->
+            </div>
+            
+            <!-- Dish scroll grid -->
+            <div id="add-daily-dialog-dishes-grid" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 8px;">
+              <!-- Checkable list of dishes that are NOT in daily menu -->
+            </div>
+          </div>
+          
+          <!-- Divider line -->
+          <div style="width: 1px; background-color: var(--color-border);"></div>
+          
+          <!-- Right Column: Checked Dishes Preview List -->
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden; min-width: 220px;">
+            <div style="font-weight: 700; font-size: 14px; color: var(--color-text-secondary); display: flex; justify-content: space-between; align-items: center;">
+              <span>已勾选菜品</span>
+              <span id="add-daily-dialog-checked-count" style="background-color: var(--color-brand-peach); color: var(--color-brand-rust); padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 800;">0</span>
+            </div>
+            
+            <div id="add-daily-dialog-preview-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+              <!-- List of checked dishes -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Dialog actions footer -->
+        <div class="m3-dialog-actions" style="margin-top: 16px; border-top: 1px solid var(--color-border); padding-top: 16px;">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-add-daily-dish-cancel" style="color: var(--color-text-secondary);">取消</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-add-daily-dish-confirm">确认添加</button>
+        </div>
+      </div>
+
+      <!-- ================= DAILY STOCK CONFIG DIALOG ================= -->
+      <div id="daily-stock-config-dialog-scrim" class="dialog-scrim" style="z-index: 1020;"></div>
+      <div id="daily-stock-config-dialog" class="m3-dialog" style="z-index: 1021; max-width: 440px; padding: 28px; border-radius: 28px;">
+        <!-- Dynamically rendered in JS -->
+      </div>
+
+      <!-- ================= CATEGORY DELETE DIALOG ================= -->
+      <div id="category-delete-dialog-scrim" class="dialog-scrim" style="z-index: 1010;"></div>
+      <div id="category-delete-dialog" class="m3-dialog" style="z-index: 1011; max-width: 400px; padding: 24px;">
+        <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--color-error);">warning</span>
+          <span>确认删除分类？</span>
+        </h3>
+        <p class="m3-dialog-content" id="category-delete-dialog-text" style="margin: 12px 0 20px;">
+          确定要删除该分类吗？删除后该分类下的所有菜品将被归类为“未分类”。
+        </p>
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-category-delete-cancel" style="color: var(--color-text-secondary);">取消</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-category-delete-confirm" style="background-color: var(--color-error);">确认删除</button>
+        </div>
+      </div>
+
+      <!-- ================= CATEGORY CREATE DIALOG ================= -->
+      <div id="category-create-dialog-scrim" class="dialog-scrim" style="z-index: 1010;"></div>
+      <div id="category-create-dialog" class="m3-dialog" style="z-index: 1011; max-width: 400px; padding: 24px;">
+        <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--color-brand-rust);">create_new_folder</span>
+          <span>新增菜品分类</span>
+        </h3>
+        <div style="margin: 16px 0 20px;">
+          <md-outlined-text-field id="new-category-name-input" label="分类名称" placeholder="例如: 甜品" style="width: 100%;"></md-outlined-text-field>
+        </div>
+        <div class="m3-dialog-actions">
+          <button type="button" class="m3-dialog-btn btn-text" id="btn-category-create-cancel" style="color: var(--color-text-secondary);">取消</button>
+          <button type="button" class="m3-dialog-btn btn-filled" id="btn-category-create-confirm">确认创建</button>
+        </div>
+      </div>
+
+      <!-- ================= TOAST NOTIFICATION ================= -->
+      <div id="merchant-toast" class="toast">
+        <span class="material-symbols-outlined" id="m-toast-icon">info</span>
+        <span id="m-toast-msg">Notification Message</span>
+      </div>
+
+    </div>
+
+    <!-- Main Module Script -->
+    <script type="module" src="/src/merchant.js"></script>
+  </body>
+</html>

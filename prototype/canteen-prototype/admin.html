@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Eats - Admin Dashboard</title>
+    <!-- Outlined Google Fonts & Icons -->
+    <link rel="stylesheet" href="/src/admin-style.css" />
+  </head>
+  <body>
+    
+    <!-- ================= ADMINISTRATOR LOGIN SCREEN ================= -->
+    <div id="admin-login-view" class="admin-login-container active">
+      <!-- Centered Login Box -->
+      <div class="admin-login-box">
+        <!-- Logo Header -->
+        <div class="login-header">
+          <div class="logo-box">
+            <span class="material-symbols-outlined logo-icon">shield_person</span>
+          </div>
+          <span class="brand-title">Campus Eats</span>
+          <p class="login-subtitle">Administrator Console Sign In</p>
+        </div>
+
+        <!-- Sign In Card -->
+        <div class="form-card">
+          <h1 class="card-title">Sign In</h1>
+
+          <!-- Login Form -->
+          <form class="auth-form" id="admin-login-form" onsubmit="return false;">
+            
+            <!-- Account Field -->
+            <md-outlined-text-field id="login-username" label="Admin ID / Email" required style="width: 100%;">
+              <span slot="trailing-icon" class="material-symbols-outlined">account_circle</span>
+            </md-outlined-text-field>
+
+            <!-- Password Field -->
+            <div id="login-pwd-wrapper">
+              <md-outlined-text-field id="login-password" type="password" label="Password" required style="width: 100%;">
+                <span slot="trailing-icon" class="material-symbols-outlined eye-toggle" id="admin-login-pwd-toggle">visibility</span>
+              </md-outlined-text-field>
+            </div>
+
+            <!-- Action Button -->
+            <button type="submit" class="btn-primary" id="btn-submit-login">Sign In</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Copyright Footer -->
+      <footer class="screen-footer">
+        <p>© 2024 Campus Eats Ecosystem. All rights reserved.</p>
+      </footer>
+    </div>
+
+    <!-- ================= MAIN WORKSPACE AREA ================= -->
+    <div id="admin-main-view" class="admin-main-container">
+      
+      <!-- Side Navigation Drawer (Collapsible) -->
+      <nav class="side-drawer" id="admin-side-drawer">
+        <div class="drawer-header">
+          <button type="button" class="drawer-toggle-btn" id="btn-drawer-toggle">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <span class="drawer-brand-name">Campus Eats</span>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="drawer-body">
+          <div class="nav-item active" data-view="view-dashboard">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">dashboard</span>
+            </div>
+            <span class="nav-label">仪表盘</span>
+          </div>
+
+          <div class="nav-item" data-view="view-users">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">group</span>
+            </div>
+            <span class="nav-label">用户管理</span>
+          </div>
+
+          <div class="nav-item" data-view="view-merchants">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">storefront</span>
+            </div>
+            <span class="nav-label">商家窗口管理</span>
+          </div>
+
+          <div class="nav-item" data-view="view-config">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">settings</span>
+            </div>
+            <span class="nav-label">系统配置</span>
+          </div>
+
+          <div class="nav-item" data-view="view-logs">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">list_alt</span>
+            </div>
+            <span class="nav-label">操作日志</span>
+          </div>
+
+          <div class="nav-item" data-view="view-abnormal">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined">warning</span>
+            </div>
+            <span class="nav-label">异常订单处理</span>
+            <span class="badge-dot-count" id="abnormal-badge-count">0</span>
+          </div>
+        </div>
+
+        <div class="drawer-footer">
+          <div class="nav-item logout-item" id="btn-admin-logout">
+            <div class="nav-icon-wrapper">
+              <span class="material-symbols-outlined text-error">logout</span>
+            </div>
+            <span class="nav-label text-error">Logout</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Panel Workspace -->
+      <div class="workspace">
+        <!-- Top Workspace Bar -->
+        <header class="workspace-header">
+          <div class="header-left">
+            <h2 class="workspace-title" id="current-view-title">仪表盘</h2>
+            <span class="system-status-chip online" id="system-status-badge">System Online</span>
+          </div>
+          
+          <div class="header-right">
+            <!-- Sync / Refresh -->
+            <button type="button" class="icon-action-btn" id="btn-header-refresh" title="Refresh Data">
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
+            <div class="admin-profile-badge">
+              <span class="material-symbols-outlined profile-avatar-icon">shield_person</span>
+              <div class="profile-meta">
+                <span class="profile-name">Admin (Root)</span>
+                <span class="profile-role">System Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Workspace Content Sub-Views -->
+        <div class="workspace-content">
+
+          <!-- 1. DASHBOARD VIEW -->
+          <div class="workspace-sub-view active" id="view-dashboard">
+            <!-- Summary Metric Cards Grid -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-title">用户总数</span>
+                  <span class="material-symbols-outlined metric-icon text-rust">group</span>
+                </div>
+                <div class="metric-value" id="dashboard-total-users">0</div>
+                <div class="metric-desc">注册学生/教职工/管理员</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-title">商家窗口数</span>
+                  <span class="material-symbols-outlined metric-icon text-orange">storefront</span>
+                </div>
+                <div class="metric-value" id="dashboard-total-stalls">0</div>
+                <div class="metric-desc">在线运行的主题美食窗口</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-title">今日订单数</span>
+                  <span class="material-symbols-outlined metric-icon text-green">receipt_long</span>
+                </div>
+                <div class="metric-value" id="dashboard-today-orders">0</div>
+                <div class="metric-desc">今日实时支付成功的订单数</div>
+              </div>
+
+              <div class="metric-card urgent">
+                <div class="metric-header">
+                  <span class="metric-title">异常订单数</span>
+                  <span class="material-symbols-outlined metric-icon text-error">warning</span>
+                </div>
+                <div class="metric-value" id="dashboard-abnormal-orders">0</div>
+                <div class="metric-desc">需要人工介入释放或取消的订单</div>
+              </div>
+            </div>
+
+            <!-- Lower dashboard split section -->
+            <div class="dashboard-split">
+              <!-- Left: System Health Status Widget -->
+              <div class="dashboard-widget flex-2">
+                <h3 class="widget-title">业务微服务状态</h3>
+                <div class="status-grid">
+                  <div class="status-row">
+                    <div class="service-meta">
+                      <span class="status-indicator online"></span>
+                      <span class="service-name">order-service (订单服务)</span>
+                    </div>
+                    <span class="status-text">100% Operational</span>
+                  </div>
+
+                  <div class="status-row">
+                    <div class="service-meta">
+                      <span class="status-indicator online"></span>
+                      <span class="service-name">menu-service (菜单/库存服务)</span>
+                    </div>
+                    <span class="status-text">100% Operational</span>
+                  </div>
+
+                  <div class="status-row">
+                    <div class="service-meta">
+                      <span class="status-indicator online"></span>
+                      <span class="service-name">pickup-service (排队取餐码服务)</span>
+                    </div>
+                    <span class="status-text">100% Operational</span>
+                  </div>
+
+                  <div class="status-row">
+                    <div class="service-meta">
+                      <span class="status-indicator online"></span>
+                      <span class="service-name">payment-gateway (支付网关中间件)</span>
+                    </div>
+                    <span class="status-text">100% Operational</span>
+                  </div>
+                </div>
+                <div class="widget-footer">
+                  <span>最近更新时间：<strong id="system-update-time">Just now</strong></span>
+                </div>
+              </div>
+
+              <!-- Right: Quick Actions -->
+              <div class="dashboard-widget flex-1">
+                <h3 class="widget-title">快捷入口</h3>
+                <div class="quick-links">
+                  <button type="button" class="quick-link-btn" data-target="view-users">
+                    <span class="material-symbols-outlined">group</span>
+                    <span>用户密码重置</span>
+                  </button>
+                  <button type="button" class="quick-link-btn" data-target="view-merchants">
+                    <span class="material-symbols-outlined">add_business</span>
+                    <span>新建商家窗口</span>
+                  </button>
+                  <button type="button" class="quick-link-btn" data-target="view-config">
+                    <span class="material-symbols-outlined">settings_suggest</span>
+                    <span>更改支付超时</span>
+                  </button>
+                  <button type="button" class="quick-link-btn urgent" data-target="view-abnormal">
+                    <span class="material-symbols-outlined">healing</span>
+                    <span>异常库存补偿</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. USER MANAGEMENT VIEW -->
+          <div class="workspace-sub-view" id="view-users">
+            <!-- Filter Action Bar -->
+            <div class="filter-action-bar">
+              <div class="filter-left">
+                <!-- Search -->
+                <div class="search-box">
+                  <span class="material-symbols-outlined search-icon">search</span>
+                  <input type="text" id="user-search-input" placeholder="输入手机号/昵称进行搜索..." />
+                </div>
+                <!-- Role Filter -->
+                <div class="select-wrapper">
+                  <select id="user-role-filter">
+                    <option value="ALL">所有角色</option>
+                    <option value="USER">学生/教职工 (USER)</option>
+                    <option value="MERCHANT">商家账户 (MERCHANT)</option>
+                    <option value="ADMIN">管理员 (ADMIN)</option>
+                  </select>
+                </div>
+                <!-- Status Filter -->
+                <div class="select-wrapper">
+                  <select id="user-status-filter">
+                    <option value="ALL">所有状态</option>
+                    <option value="ACTIVE">正常</option>
+                    <option value="DISABLED">禁用</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Users Table Container -->
+            <div class="table-card">
+              <table class="data-table" id="users-table">
+                <thead>
+                  <tr>
+                    <th>用户 ID</th>
+                    <th>登录账号 (手机号)</th>
+                    <th>昵称</th>
+                    <th>系统角色</th>
+                    <th>账户状态</th>
+                    <th>注册时间</th>
+                    <th style="text-align: right;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Pagination -->
+            <div class="table-pagination">
+              <span class="pagination-info">Showing <span id="user-page-start">1</span> to <span id="user-page-end">5</span> of <span id="user-page-total">5</span> users</span>
+              <div class="pagination-controls">
+                <button type="button" class="page-btn" id="btn-user-prev" disabled>
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button type="button" class="page-btn" id="btn-user-next" disabled>
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. MERCHANT WINDOW MANAGEMENT VIEW -->
+          <div class="workspace-sub-view" id="view-merchants">
+            <!-- Filter Action Bar -->
+            <div class="filter-action-bar">
+              <div class="filter-left">
+                <div class="search-box">
+                  <span class="material-symbols-outlined search-icon">search</span>
+                  <input type="text" id="merchant-search-input" placeholder="输入窗口名称/负责人..." />
+                </div>
+                <div class="select-wrapper">
+                  <select id="merchant-status-filter">
+                    <option value="ALL">所有状态</option>
+                    <option value="ACTIVE">营运中</option>
+                    <option value="SUSPENDED">停用中</option>
+                  </select>
+                </div>
+              </div>
+              <div class="filter-right">
+                <button type="button" class="btn-primary" id="btn-add-merchant">
+                  <span class="material-symbols-outlined">add</span>
+                  <span>新增美食窗口</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Merchant Table Container -->
+            <div class="table-card">
+              <table class="data-table" id="merchants-table">
+                <thead>
+                  <tr>
+                    <th>窗口 ID</th>
+                    <th>关联账号</th>
+                    <th>窗口美食名称</th>
+                    <th>档口负责人</th>
+                    <th>联系电话</th>
+                    <th>主营分类</th>
+                    <th>营业状态</th>
+                    <th style="text-align: right;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="merchants-table-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 4. SYSTEM CONFIGURATION VIEW -->
+          <div class="workspace-sub-view" id="view-config">
+            <div class="config-container">
+              <!-- Left Form Card -->
+              <div class="config-main-card">
+                <!-- Tabs -->
+                <div class="config-tabs-bar">
+                  <button type="button" class="config-tab active" data-group="order">订单时限配置</button>
+                  <button type="button" class="config-tab" data-group="pickup">排队取餐配置</button>
+                  <button type="button" class="config-tab" data-group="stock">菜单库存配置</button>
+                </div>
+
+                <!-- Config Form Groups -->
+                <form id="system-config-form" class="config-form">
+                  <!-- Group 1: Order -->
+                  <div class="config-group-section active" id="config-group-order">
+                    <div class="config-form-item">
+                      <div class="config-meta">
+                        <label class="config-form-label">待支付订单超时时限 (分钟)</label>
+                        <p class="config-form-desc">用户提交订单后未支付，系统自动释放库存的等待时限（默认 10 分钟）。</p>
+                      </div>
+                      <md-outlined-text-field type="number" min="1" max="60" id="cfg-pay-timeout" value="10" required></md-outlined-text-field>
+                    </div>
+
+                    <div class="config-form-item">
+                      <div class="config-meta">
+                        <label class="config-form-label">商家接单超时时限 (分钟)</label>
+                        <p class="config-form-desc">用户支付完成后，商家厨房若在时限内未点击接单，订单自动取消全额退款。</p>
+                      </div>
+                      <md-outlined-text-field type="number" min="1" max="60" id="cfg-accept-timeout" value="10" required></md-outlined-text-field>
+                    </div>
+
+                    <div class="config-form-item">
+                      <div class="config-meta">
+                        <label class="config-form-label">支付后自主取消时间窗口 (分钟)</label>
+                        <p class="config-form-desc">商家接单前，用户允许随时自主发起退单的冷静时间窗口。</p>
+                      </div>
+                      <md-outlined-text-field type="number" min="0" max="10" id="cfg-cancel-window" value="1" required></md-outlined-text-field>
+                    </div>
+                  </div>
+
+                  <!-- Group 2: Pickup -->
+                  <div class="config-group-section" id="config-group-pickup">
+                    <div class="config-form-item">
+                      <div class="config-meta">
+                        <label class="config-form-label">取餐排队流水号重置规则</label>
+                        <p class="config-form-desc">用于规范小票取餐码（如 A001 等）在什么时候归零重新计算流水。</p>
+                      </div>
+                      <div class="select-wrapper" style="width: 220px;">
+                        <select id="cfg-pickup-reset">
+                          <option value="NONE">不自动重置 (NONE)</option>
+                          <option value="DAILY" selected>每天重置归零 (DAILY)</option>
+                          <option value="WEEKLY">每周重置归零 (WEEKLY)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Group 3: Stock -->
+                  <div class="config-group-section" id="config-group-stock">
+                    <div class="config-form-item">
+                      <div class="config-meta">
+                        <label class="config-form-label">极速低库存预警检测扫描间隔 (秒)</label>
+                        <p class="config-form-desc">定时巡检各档口主食库存，判定并向商家端或系统级触发低库存警报的时间间隔。</p>
+                      </div>
+                      <md-outlined-text-field type="number" min="10" max="3600" id="cfg-stock-scan" value="300" required></md-outlined-text-field>
+                    </div>
+                  </div>
+
+                  <div class="config-submit-row">
+                    <button type="submit" class="btn-primary" id="btn-save-config">保存配置更改</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Right: Config History Log Widget -->
+              <div class="config-side-card">
+                <h3 class="widget-title">近期修改日志</h3>
+                <div class="log-timeline" id="config-logs-container">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. OPERATION LOGS VIEW -->
+          <div class="workspace-sub-view" id="view-logs">
+            <!-- Filter Action Bar -->
+            <div class="filter-action-bar">
+              <div class="filter-left">
+                <div class="search-box">
+                  <span class="material-symbols-outlined search-icon">search</span>
+                  <input type="text" id="log-search-input" placeholder="按操作者 / 操作对象搜索..." />
+                </div>
+                <div class="select-wrapper">
+                  <select id="log-type-filter">
+                    <option value="ALL">所有操作类型</option>
+                    <option value="USER_STATUS">账户禁用/启用</option>
+                    <option value="USER_PWD">重置密码</option>
+                    <option value="MERCHANT_ADD">添加窗口</option>
+                    <option value="MERCHANT_EDIT">编辑窗口</option>
+                    <option value="CONFIG_UPDATE">配置更新</option>
+                    <option value="ABNORMAL_ORDER">异常订单干预</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Logs Table Container -->
+            <div class="table-card">
+              <table class="data-table" id="logs-table">
+                <thead>
+                  <tr>
+                    <th>日志 ID</th>
+                    <th>操作管理员</th>
+                    <th>操作类型</th>
+                    <th>操作靶向对象</th>
+                    <th>执行结果</th>
+                    <th>操作时戳</th>
+                    <th style="text-align: right;">细节</th>
+                  </tr>
+                </thead>
+                <tbody id="logs-table-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 6. ABNORMAL ORDER PROCESSING VIEW -->
+          <div class="workspace-sub-view" id="view-abnormal">
+            <!-- Filter Action Bar -->
+            <div class="filter-action-bar">
+              <div class="filter-left">
+                <div class="search-box">
+                  <span class="material-symbols-outlined search-icon">search</span>
+                  <input type="text" id="abnormal-search-input" placeholder="输入订单号 (#) 搜索..." />
+                </div>
+                <div class="select-wrapper">
+                  <select id="abnormal-cause-filter">
+                    <option value="ALL">所有异常类型</option>
+                    <option value="PAY_TIMEOUT">支付超时锁定</option>
+                    <option value="STALL_TIMEOUT">商家接单超时</option>
+                    <option value="STOCK_LOCKED">库存状态回滚失败</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Abnormal Orders Table -->
+            <div class="table-card">
+              <table class="data-table" id="abnormal-table">
+                <thead>
+                  <tr>
+                    <th>订单号</th>
+                    <th>商家档口</th>
+                    <th>下单时间</th>
+                    <th>停留时长</th>
+                    <th>异常判定原因</th>
+                    <th>异常触发类型</th>
+                    <th style="text-align: right;">紧急干预操作</th>
+                  </tr>
+                </thead>
+                <tbody id="abnormal-table-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= SLIDE-OUT DETAIL DRAWERS ================= -->
+    <!-- 1. User Details Drawer -->
+    <div id="drawer-user-details-scrim" class="drawer-scrim"></div>
+    <div id="drawer-user-details" class="detail-drawer">
+      <div class="drawer-inner-header">
+        <h3 class="drawer-header-title">用户详细账户档案</h3>
+        <button type="button" class="drawer-close-btn" id="btn-user-drawer-close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="drawer-inner-body" id="user-drawer-content">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- 2. Log Details Dialog -->
+    <div id="dialog-log-details-scrim" class="dialog-scrim"></div>
+    <div id="dialog-log-details" class="m3-dialog log-details-modal">
+      <h3 class="m3-dialog-title" style="display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--color-brand-rust);">info</span>
+        <span>日志操作数据详情</span>
+      </h3>
+      <div class="m3-dialog-content">
+        <pre class="json-code-box" id="log-details-payload"></pre>
+      </div>
+      <div class="m3-dialog-actions">
+        <button type="button" class="m3-dialog-btn btn-filled" id="btn-log-details-close">关闭</button>
+      </div>
+    </div>
+
+    <!-- ================= ADD MERCHANT DIALOG ================= -->
+    <div id="dialog-add-merchant-scrim" class="dialog-scrim"></div>
+    <div id="dialog-add-merchant" class="m3-dialog">
+      <h3 class="m3-dialog-title">新增商家美食窗口</h3>
+      <div class="m3-dialog-content">
+        <form id="form-add-merchant" class="m3-dialog-form">
+          <md-outlined-text-field id="add-stall-name" label="窗口美食名称" placeholder="例如: 酱香饼屋" required></md-outlined-text-field>
+          <md-outlined-text-field id="add-manager" label="档口负责人" placeholder="例如: 张大叔" required></md-outlined-text-field>
+          <md-outlined-text-field id="add-phone" label="负责人联系电话" placeholder="例如: 13912345678" required></md-outlined-text-field>
+          
+          <div class="form-row-grid">
+            <div class="select-label-wrapper">
+              <span class="input-label">主营经营分类</span>
+              <div class="select-wrapper">
+                <select id="add-category">
+                  <option value="面点主食">面点主食 (Ramen & Dough)</option>
+                  <option value="沙拉轻食">沙拉轻食 (Salads & Bowls)</option>
+                  <option value="西式烧烤">西式烧烤 (Grill & Burger)</option>
+                  <option value="中式快餐">中式快餐 (Traditional Meals)</option>
+                  <option value="甜品饮品">甜品饮品 (Desserts & Drinks)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin: 12px 0; border-top: 1px dashed var(--color-border); padding-top: 12px;">
+            <p style="font-size: 0.78rem; color: var(--color-text-secondary); margin-bottom: 8px;"><strong>商家登录账号配置</strong></p>
+            <md-outlined-text-field id="add-username" label="登录账户手机号" placeholder="商家以此账号登录后台" required></md-outlined-text-field>
+            <md-outlined-text-field id="add-password" label="初始登录密码" type="password" value="123456" required></md-outlined-text-field>
+          </div>
+        </form>
+      </div>
+      <div class="m3-dialog-actions">
+        <button type="button" class="m3-dialog-btn btn-text" id="btn-add-merchant-cancel">取消</button>
+        <button type="button" class="m3-dialog-btn btn-filled" id="btn-add-merchant-submit">确认创建</button>
+      </div>
+    </div>
+
+    <!-- ================= EDIT MERCHANT DIALOG ================= -->
+    <div id="dialog-edit-merchant-scrim" class="dialog-scrim"></div>
+    <div id="dialog-edit-merchant" class="m3-dialog">
+      <h3 class="m3-dialog-title">编辑美食窗口配置</h3>
+      <div class="m3-dialog-content">
+        <form id="form-edit-merchant" class="m3-dialog-form">
+          <input type="hidden" id="edit-merchant-id" />
+          <md-outlined-text-field id="edit-stall-name" label="窗口美食名称" required></md-outlined-text-field>
+          <md-outlined-text-field id="edit-manager" label="档口负责人" required></md-outlined-text-field>
+          <md-outlined-text-field id="edit-phone" label="负责人联系电话" required></md-outlined-text-field>
+          
+          <div class="form-row-grid">
+            <div class="select-label-wrapper">
+              <span class="input-label">主营经营分类</span>
+              <div class="select-wrapper">
+                <select id="edit-category">
+                  <option value="面点主食">面点主食</option>
+                  <option value="沙拉轻食">沙拉轻食</option>
+                  <option value="西式烧烤">西式烧烤</option>
+                  <option value="中式快餐">中式快餐</option>
+                  <option value="甜品饮品">甜品饮品</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="select-label-wrapper">
+              <span class="input-label">窗口营运状态</span>
+              <div class="select-wrapper">
+                <select id="edit-status">
+                  <option value="ACTIVE">营运中</option>
+                  <option value="SUSPENDED">停用整顿中</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="m3-dialog-actions">
+        <button type="button" class="m3-dialog-btn btn-text" id="btn-edit-merchant-cancel">取消</button>
+        <button type="button" class="m3-dialog-btn btn-filled" id="btn-edit-merchant-submit">保存修改</button>
+      </div>
+    </div>
+
+    <!-- ================= RESET PASSWORD DIALOG ================= -->
+    <div id="dialog-reset-pwd-scrim" class="dialog-scrim"></div>
+    <div id="dialog-reset-pwd" class="m3-dialog">
+      <h3 class="m3-dialog-title">重置用户登录密码</h3>
+      <p class="m3-dialog-content" id="reset-pwd-prompt-text">正在为用户重置账户密码，请输入新密码：</p>
+      <div class="m3-dialog-content">
+        <input type="hidden" id="reset-pwd-user-id" />
+        <md-outlined-text-field id="reset-pwd-new" label="输入新密码" type="password" value="888888" required></md-outlined-text-field>
+      </div>
+      <div class="m3-dialog-actions">
+        <button type="button" class="m3-dialog-btn btn-text" id="btn-reset-pwd-cancel">取消</button>
+        <button type="button" class="m3-dialog-btn btn-filled" id="btn-reset-pwd-confirm">重置密码</button>
+      </div>
+    </div>
+
+    <!-- ================= GENERIC ACTION CONFIRM DIALOG ================= -->
+    <div id="dialog-confirm-scrim" class="dialog-scrim"></div>
+    <div id="dialog-confirm" class="m3-dialog">
+      <h3 class="m3-dialog-title" id="confirm-title">警告</h3>
+      <p class="m3-dialog-content" id="confirm-content">确认要执行此危险操作吗？</p>
+      <div class="m3-dialog-actions">
+        <button type="button" class="m3-dialog-btn btn-text" id="btn-confirm-cancel">取消</button>
+        <button type="button" class="m3-dialog-btn btn-filled" id="btn-confirm-ok">确认执行</button>
+      </div>
+    </div>
+
+    <!-- ================= TOAST NOTIFICATION ================= -->
+    <div id="admin-toast" class="toast">
+      <span class="material-symbols-outlined" id="a-toast-icon">info</span>
+      <span id="a-toast-msg">Notification Message</span>
+    </div>
+
+    <!-- Main JS Application Logic -->
+    <script type="module" src="/src/admin.js"></script>
+  </body>
+</html>
