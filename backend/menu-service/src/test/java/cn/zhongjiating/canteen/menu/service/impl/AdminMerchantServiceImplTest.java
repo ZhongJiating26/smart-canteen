@@ -32,7 +32,7 @@ class AdminMerchantServiceImplTest {
                 .thenReturn(Result.success(new MerchantAccountVO(1000004L, "13800138004", "MERCHANT", 1)));
 
         service.create(new AdminMerchantCreateRequest("13800138004", "123456", " 二号窗口 ",
-                " 李店长 ", "13800138004", " 面食 "));
+                " 李店长 ", "13800138004", " 面食 ", null));
 
         ArgumentCaptor<Merchant> merchantCaptor = ArgumentCaptor.forClass(Merchant.class);
         verify(merchantMapper).insert(merchantCaptor.capture());

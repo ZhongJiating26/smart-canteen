@@ -118,7 +118,7 @@ body {
 
 /* Screen Top Header */
 .screen-header {
-  padding: 16px 24px 12px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   background-color: var(--color-bg-viewport);
@@ -151,7 +151,6 @@ body {
 }
 
 .header-icon {
-  font-size: 26px;
   color: var(--color-text-primary);
   cursor: pointer;
   display: flex;
@@ -161,6 +160,11 @@ body {
   height: 36px;
   border-radius: 50%;
   transition: background-color 0.2s;
+}
+
+.header-icon .material-symbols-outlined {
+  font-size: 24px;
+  line-height: 1;
 }
 
 .header-icon.clickable:hover {
@@ -616,7 +620,7 @@ md-outlined-text-field .eye-toggle:hover {
   line-height: 1.4;
   margin-bottom: 20px;
   opacity: 0.85;
-  max-width: 250px;
+  max-width: 100%;
 }
 
 .promo-chips {
@@ -634,6 +638,30 @@ md-outlined-text-field .eye-toggle:hover {
   font-size: 0.75rem;
   font-weight: 700;
   color: #2a0e00;
+}
+
+.promo-login-btn {
+  background-color: #2a0e00;
+  color: #ffffff;
+  border: none;
+  border-radius: 100px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 4px;
+  margin-bottom: 16px;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(42, 14, 0, 0.25);
+}
+
+.promo-login-btn:hover {
+  opacity: 0.9;
+}
+
+.promo-login-btn:active {
+  transform: scale(0.96);
 }
 
 .icon-small {
@@ -756,6 +784,11 @@ md-outlined-text-field .eye-toggle:hover {
 
 .stall-card:active {
   transform: scale(0.98);
+}
+
+.stall-card-inactive {
+  opacity: 0.6;
+  filter: grayscale(80%);
 }
 
 .stall-img {
@@ -1831,7 +1864,7 @@ md-outlined-text-field .eye-toggle:hover {
 /* ================= CONFIRM ORDER SCREEN ================= */
 .confirm-order-container {
   flex: 1;
-  padding: 0 24px 120px;
+  padding: 20px 24px 120px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
@@ -2733,6 +2766,8 @@ md-outlined-text-field .eye-toggle:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(162, 59, 0, 0.2);
 }
@@ -3389,3 +3424,13 @@ md-outlined-text-field .eye-toggle:hover {
 .edit-profile-actions .btn-primary:active {
   transform: scale(0.98);
 }
+
+.btn-add-cart-circle:disabled,
+.btn-qty-minus:disabled,
+.btn-qty-plus:disabled {
+  background-color: var(--color-text-muted) !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+

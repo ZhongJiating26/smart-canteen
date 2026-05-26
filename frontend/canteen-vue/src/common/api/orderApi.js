@@ -39,3 +39,7 @@ export function dispatchOrder(orderId) {
 export function getMerchantOrders(params) {
   return request.get('/order/merchant/list', { params })
 }
+
+export function getMyStatistics() {
+  return request.get('/order/my/statistics')
+}

@@ -23,10 +23,12 @@ import cn.zhongjiating.canteen.order.vo.OrderItemVO;
 import cn.zhongjiating.canteen.order.vo.OrderStatusLogVO;
 import cn.zhongjiating.canteen.order.vo.OrderStatusVO;
 import cn.zhongjiating.canteen.order.vo.OrderSummaryVO;
+import cn.zhongjiating.canteen.order.vo.UserOrderStatisticsVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -170,4 +172,45 @@ public class OrderQueryServiceImpl implements OrderQueryService {
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
     }
+
+    @Override
+    public UserOrderStatisticsVO getMyStatistics() {
+        UserContext context = requireUser();
+        Long userId = context.getUserId();
+        Long count = orderMapper.selectCount(new LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId)
+                .eq(Order::getStatus, OrderStatus.COMPLETED.getCode()));
+        List<Order> completedOrders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
+                .select(Order::getTotalAmount)
+                .eq(Order::getUserId, userId)
+                .eq(Order::getStatus, OrderStatus.COMPLETED.getCode()));
+        BigDecimal totalSpend = completedOrders.stream()
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new UserOrderStatisticsVO(count, totalSpend);
+    }
+
+    @Override
+    public java.util.Map<Long, Integer> getMerchantMonthlySales(List<Long> merchantIds) {
+        java.util.Map<Long, Integer> result = new java.util.HashMap<>();
+        if (merchantIds == null || merchantIds.isEmpty()) {
+            return result;
+        }
+        java.time.LocalDateTime thirtyDaysAgo = java.time.LocalDateTime.now().minusDays(30);
+        List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
+                .select(Order::getMerchantId)
+                .in(Order::getMerchantId, merchantIds)
+                .eq(Order::getStatus, OrderStatus.COMPLETED.getCode())
+                .ge(Order::getCreateTime, thirtyDaysAgo));
+        for (Long id : merchantIds) {
+            result.put(id, 0);
+        }
+        for (Order order : orders) {
+            if (order.getMerchantId() != null) {
+                result.put(order.getMerchantId(), result.getOrDefault(order.getMerchantId(), 0) + 1);
+            }
+        }
+        return result;
+    }
 }
+

@@ -33,12 +33,6 @@ const routes = [
     meta: { auth: true, role: 'MERCHANT' }
   },
   {
-    path: '/store',
-    name: 'StoreConfig',
-    component: () => import('./views/StoreConfigView.vue'),
-    meta: { auth: true, role: 'MERCHANT' }
-  },
-  {
     path: '/',
     redirect: '/orders'
   }

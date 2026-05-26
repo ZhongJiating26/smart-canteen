@@ -4,6 +4,7 @@ import cn.zhongjiating.canteen.common.dto.PageResult;
 import cn.zhongjiating.canteen.order.vo.OrderDetailVO;
 import cn.zhongjiating.canteen.order.vo.OrderStatusVO;
 import cn.zhongjiating.canteen.order.vo.OrderSummaryVO;
+import cn.zhongjiating.canteen.order.vo.UserOrderStatisticsVO;
 
 import java.util.List;
 
@@ -16,4 +17,8 @@ public interface OrderQueryService {
     OrderDetailVO detail(Long orderId);
 
     List<OrderSummaryVO> merchantOrders(String status, Long merchantId);
+
+    UserOrderStatisticsVO getMyStatistics();
+
+    java.util.Map<Long, Integer> getMerchantMonthlySales(List<Long> merchantIds);
 }

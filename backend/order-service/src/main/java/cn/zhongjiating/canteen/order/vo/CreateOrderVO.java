@@ -1,11 +1,14 @@
 package cn.zhongjiating.canteen.order.vo;
 
 import cn.zhongjiating.canteen.order.entity.Order;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record CreateOrderVO(
+        @JsonSerialize(using = ToStringSerializer.class)
         Long orderId,
         String orderNo,
         BigDecimal totalAmount,

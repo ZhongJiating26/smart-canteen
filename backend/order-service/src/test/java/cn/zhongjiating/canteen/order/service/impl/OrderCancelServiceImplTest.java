@@ -28,6 +28,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,25 +54,41 @@ class OrderCancelServiceImplTest {
     }
 
     @Test
-    void cancelPaidOrderReleasesInventoryAndRemovesQueue() {
+    void cancelPaidOrderReleasesInventoryWithoutRemovingQueue() {
         UserContextHolder.set(UserContext.of(1000001L, "user", RoleEnum.USER));
         Order order = paidOrder();
         when(orderMapper.selectById(8000001L)).thenReturn(order);
         when(orderMapper.cancelIfStatus(any(), any(), any(), any())).thenReturn(1);
         when(orderItemMapper.selectByOrderId(8000001L)).thenReturn(List.of(orderItem()));
         when(menuFeignClient.release(any())).thenReturn(Result.success(new InventoryOperationResponse(true)));
-        when(pickupFeignClient.removeQueue(any())).thenReturn(Result.success());
 
         OrderStatusVO result = service().cancelByUser(8000001L, new CancelOrderRequest(" 不想吃了 "));
 
         ArgumentCaptor<OrderStatusLog> logCaptor = ArgumentCaptor.forClass(OrderStatusLog.class);
         verify(menuFeignClient).release(any());
-        verify(pickupFeignClient).removeQueue(any());
+        verify(pickupFeignClient, never()).removeQueue(any());
         verify(orderStatusLogMapper).insert(logCaptor.capture());
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED.getCode());
         assertThat(order.getCancelReason()).isEqualTo("不想吃了");
         assertThat(logCaptor.getValue().getFromStatus()).isEqualTo(OrderStatus.PAID.getCode());
         assertThat(logCaptor.getValue().getToStatus()).isEqualTo(OrderStatus.CANCELLED.getCode());
+    }
+
+    @Test
+    void cancelPreparingOrderRemovesQueue() {
+        UserContextHolder.set(UserContext.of(1000001L, "user", RoleEnum.USER));
+        Order order = paidOrder();
+        order.setStatus(OrderStatus.PREPARING.getCode());
+        order.setAcceptTime(java.time.LocalDateTime.now());
+        when(orderMapper.selectById(8000001L)).thenReturn(order);
+        when(orderMapper.cancelIfStatus(any(), any(), any(), any())).thenReturn(1);
+        when(orderItemMapper.selectByOrderId(8000001L)).thenReturn(List.of(orderItem()));
+        when(menuFeignClient.release(any())).thenReturn(Result.success(new InventoryOperationResponse(true)));
+        when(pickupFeignClient.removeQueue(any())).thenReturn(Result.success());
+
+        service().cancelByUser(8000001L, new CancelOrderRequest("临时取消"));
+
+        verify(pickupFeignClient).removeQueue(any());
     }
 
     private OrderCancelServiceImpl service() {

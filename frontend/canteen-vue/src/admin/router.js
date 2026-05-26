@@ -33,18 +33,6 @@ const routes = [
     meta: { auth: true, role: 'ADMIN' }
   },
   {
-    path: '/logs',
-    name: 'OperationLogs',
-    component: () => import('./views/OperationLogsView.vue'),
-    meta: { auth: true, role: 'ADMIN' }
-  },
-  {
-    path: '/abnormal',
-    name: 'AbnormalOrders',
-    component: () => import('./views/AbnormalOrdersView.vue'),
-    meta: { auth: true, role: 'ADMIN' }
-  },
-  {
     path: '/',
     redirect: '/dashboard'
   }

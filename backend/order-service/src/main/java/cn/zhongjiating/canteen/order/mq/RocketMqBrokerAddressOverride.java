@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Component
@@ -73,12 +75,18 @@ public class RocketMqBrokerAddressOverride {
         }
     }
 
+    private final Set<String> preparedTopics = ConcurrentHashMap.newKeySet();
+
     public void prepareTopicRoute(DefaultMQProducer producer, String topic) {
         if (!enabled() || producer == null || !StringUtils.hasText(topic)) {
             return;
         }
+        if (preparedTopics.contains(topic)) {
+            return;
+        }
         try {
             producer.fetchPublishMessageQueues(topic);
+            preparedTopics.add(topic);
         } catch (Exception ex) {
             if (!loggedPrepareFailure) {
                 log.warn("Failed to prepare RocketMQ topic route before broker address override, topic={}", topic, ex);

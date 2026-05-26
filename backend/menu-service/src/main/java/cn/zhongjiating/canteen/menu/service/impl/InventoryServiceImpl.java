@@ -148,13 +148,14 @@ public class InventoryServiceImpl implements InventoryService {
                 continue;
             }
             int before = item.getRemainingStock();
+            int currentReserved = item.getReservedStock() != null ? item.getReservedStock() : 0;
             item.setTotalStock(item.getDailyStock());
-            item.setRemainingStock(item.getDailyStock());
-            item.setReservedStock(0);
+            item.setRemainingStock(Math.max(item.getDailyStock() - currentReserved, 0));
+            item.setReservedStock(currentReserved);
             item.setLastResetDate(today);
             itemMapper.updateById(item);
-            writeLog(item, InventoryChangeType.RESET, item.getDailyStock() - before, before,
-                    item.getDailyStock(), null);
+            writeLog(item, InventoryChangeType.RESET, item.getRemainingStock() - before, before,
+                    item.getRemainingStock(), null);
         }
     }
 

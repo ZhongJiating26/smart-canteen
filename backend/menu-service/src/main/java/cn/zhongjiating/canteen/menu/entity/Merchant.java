@@ -19,6 +19,7 @@ public class Merchant {
     private String contactPhone;
     private String category;
     private Integer status;
+    private String operatingHours;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

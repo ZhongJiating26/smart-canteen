@@ -29,6 +29,9 @@ public record AdminMerchantUpdateRequest(
         @NotNull(message = "商家窗口状态不能为空")
         @jakarta.validation.constraints.Min(value = 0, message = "商家窗口状态只能为0或1")
         @jakarta.validation.constraints.Max(value = 1, message = "商家窗口状态只能为0或1")
-        Integer status
+        Integer status,
+
+        @Schema(description = "营业时间，JSON数组", example = "[{\"startTime\":\"08:00\",\"endTime\":\"10:00\"}]")
+        String operatingHours
 ) {
 }

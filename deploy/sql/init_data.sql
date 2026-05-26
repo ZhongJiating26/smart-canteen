@@ -20,9 +20,9 @@ INSERT IGNORE INTO `user` (
 USE `canteen_menu`;
 
 INSERT IGNORE INTO `merchant` (
-    `id`, `user_id`, `name`, `contact_name`, `contact_phone`, `category`, `status`
+    `id`, `user_id`, `name`, `contact_name`, `contact_phone`, `category`, `status`, `operating_hours`
 ) VALUES
-    (2000001, 1000002, '一号窗口', '王店长', '13800000001', '综合快餐', 1);
+    (2000001, 1000002, '一号窗口', '王店长', '13800000001', '综合快餐', 1, '[{"startTime":"00:00","endTime":"23:59"}]');
 
 INSERT IGNORE INTO `dish_category` (
     `id`, `merchant_id`, `name`, `sort`

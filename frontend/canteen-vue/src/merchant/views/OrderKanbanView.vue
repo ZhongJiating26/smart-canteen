@@ -26,15 +26,15 @@
               <span class="remarks-text">备注：{{ order.remark }}</span>
             </div>
             <div class="order-card-total-row">
-              <span class="order-card-total-label">Total Amount</span>
-              <span class="order-card-total-price">${{ Number(order.totalAmount).toFixed(2) }}</span>
+              <span class="order-card-total-label">总金额</span>
+              <span class="order-card-total-price">￥{{ Number(order.totalAmount).toFixed(2) }}</span>
             </div>
             <div class="order-card-actions">
               <template v-if="column.status === 'PAID'">
-                <button type="button" class="order-card-btn btn-outline" @click="pendingReject = order">Reject</button>
-                <button type="button" class="order-card-btn btn-filled" @click="handleAccept(order)">Accept</button>
+                <button type="button" class="order-card-btn btn-outline" @click="pendingReject = order">拒绝接单</button>
+                <button type="button" class="order-card-btn btn-filled" @click="handleAccept(order)">确认接单</button>
               </template>
-              <button v-else-if="column.status === 'PREPARING'" type="button" class="order-card-btn btn-filled" @click="handleDispatch(order)">Mark Ready</button>
+              <button v-else-if="column.status === 'PREPARING'" type="button" class="order-card-btn btn-filled" @click="handleDispatch(order)">完成制作</button>
               <button v-else type="button" class="order-card-btn btn-filled-light" @click="handleCall(order)">再次叫号</button>
             </div>
           </div>
@@ -48,11 +48,11 @@
 
     <div class="dialog-scrim" :class="{ show: pendingReject }" @click="pendingReject = null"></div>
     <div class="m3-dialog" :class="{ show: pendingReject }">
-      <h3 class="m3-dialog-title">Reject Order?</h3>
-      <p class="m3-dialog-content">Are you sure you want to reject this order? This action cannot be undone.</p>
+      <h3 class="m3-dialog-title">拒绝订单？</h3>
+      <p class="m3-dialog-content">您确定要拒绝该订单吗？此操作无法撤销。</p>
       <div class="m3-dialog-actions">
-        <button type="button" class="m3-dialog-btn btn-text" @click="pendingReject = null">Cancel</button>
-        <button type="button" class="m3-dialog-btn btn-filled" @click="confirmReject">Confirm Reject</button>
+        <button type="button" class="m3-dialog-btn btn-text" @click="pendingReject = null">取消</button>
+        <button type="button" class="m3-dialog-btn btn-filled" @click="confirmReject">确认拒绝</button>
       </div>
     </div>
   </div>
@@ -74,9 +74,9 @@ const readyOrders = ref([])
 const pendingReject = ref(null)
 
 const columns = computed(() => [
-  { id: 'col-pending', title: '待接单', status: 'PAID', orders: pendingOrders.value, emptyIcon: 'inbox', emptyText: 'No pending orders' },
-  { id: 'col-preparing', title: '制作中', status: 'PREPARING', orders: preparingOrders.value, emptyIcon: 'soup_kitchen', emptyText: 'No preparing orders' },
-  { id: 'col-ready', title: '待取餐', status: 'READY', orders: readyOrders.value, emptyIcon: 'check_circle', emptyText: 'No ready orders' }
+  { id: 'col-pending', title: '待接单', status: 'PAID', orders: pendingOrders.value, emptyIcon: 'inbox', emptyText: '暂无待接单订单' },
+  { id: 'col-preparing', title: '制作中', status: 'PREPARING', orders: preparingOrders.value, emptyIcon: 'soup_kitchen', emptyText: '暂无制作中订单' },
+  { id: 'col-ready', title: '待取餐', status: 'READY', orders: readyOrders.value, emptyIcon: 'check_circle', emptyText: '暂无待取餐订单' }
 ])
 
 function displayNo(order) {
@@ -113,7 +113,7 @@ async function fetchOrders() {
 async function handleAccept(order) {
   try {
     await acceptOrder(order.orderId)
-    toast.show(`Order ${displayNo(order)} accepted! Preparing food...`, 'soup_kitchen')
+    toast.show(`订单 ${displayNo(order)} 已接单！正在制作中...`, 'soup_kitchen')
     fetchOrders()
   } catch (e) {
     toast.show(e.message || '接单失败', 'error')
@@ -124,7 +124,7 @@ async function confirmReject() {
   if (!pendingReject.value) return
   try {
     await rejectOrder(pendingReject.value.orderId)
-    toast.show(`Order ${displayNo(pendingReject.value)} has been rejected`, 'cancel')
+    toast.show(`订单 ${displayNo(pendingReject.value)} 已拒绝`, 'cancel')
     pendingReject.value = null
     fetchOrders()
   } catch (e) {
@@ -135,7 +135,7 @@ async function confirmReject() {
 async function handleDispatch(order) {
   try {
     await dispatchOrder(order.orderId)
-    toast.show(`Order ${displayNo(order)} is ready! Notifying user...`, 'notifications_active')
+    toast.show(`订单 ${displayNo(order)} 制作完成！正在通知顾客取餐...`, 'notifications_active')
     fetchOrders()
   } catch (e) {
     toast.show(e.message || '出餐失败', 'error')
@@ -151,7 +151,7 @@ async function handleCall(order) {
   }
 }
 
-const { start } = usePolling(fetchOrders, 5000)
+const { start } = usePolling(fetchOrders, 1000)
 
 watch(refreshOrders, fetchOrders)
 onMounted(() => {

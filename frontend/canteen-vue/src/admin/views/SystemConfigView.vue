@@ -82,7 +82,7 @@ async function saveConfig() {
     await Promise.all(changed.map(key => request.put(`/admin/${service}/config`, { configKey: key, configValue: String(config[key]) })))
     const time = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date())
     changed.forEach(key => {
-      configLogs.value.unshift({ operator: 'Admin Root', item: key, oldValue: String(savedConfig[key]), newValue: String(config[key]), time })
+      configLogs.value.unshift({ operator: '系统管理员', item: key, oldValue: String(savedConfig[key]), newValue: String(config[key]), time })
       savedConfig[key] = config[key]
     })
     toast.show('配置成功保存，缓存已刷新', 'check_circle')

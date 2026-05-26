@@ -3,7 +3,9 @@
     <div class="dishes-header-row" style="margin-bottom:20px;">
       <div class="segmented-button-group">
         <button type="button" class="segmented-button" :class="{ active: activeCategory === null }" @click="activeCategory = null">全部</button>
-        <button v-for="category in categories" :key="category.categoryId" type="button" class="segmented-button" :class="{ active: activeCategory === category.categoryId }" @click="activeCategory = category.categoryId">{{ category.name }}</button>
+        <button v-for="category in categories" :key="category.categoryId" type="button" class="segmented-button" :class="{ active: activeCategory === category.categoryId }" @click="activeCategory = category.categoryId">
+          {{ category.name }}
+        </button>
       </div>
       <button type="button" class="btn-create-dish" @click="openAddDialog">
         <span class="material-symbols-outlined">add</span><span>添加菜品</span>
@@ -17,7 +19,7 @@
             <img class="list-item-avatar" :src="dishImage(item.dish)" :alt="item.dish?.name" />
             <div class="list-item-text">
               <span class="list-item-title">{{ item.dish?.name || '未知菜品' }}</span>
-              <span class="list-item-subtitle">库存: {{ item.remainingStock ?? item.dailyStock }} · ${{ price(item.dish?.price) }}</span>
+              <span class="list-item-subtitle">库存: {{ item.remainingStock ?? item.dailyStock }} · ￥{{ price(item.dish?.price) }}</span>
             </div>
             <span v-if="item.isListed !== 1" class="list-item-status-tag">下架</span>
           </div>
@@ -31,9 +33,11 @@
           <div v-if="selectedItem" class="dish-detail-content">
             <div class="dish-detail-main-block">
               <div class="dish-detail-left-col" style="gap:12px;">
-                <span class="detail-display-category-badge">{{ categoryName(selectedItem.dish?.categoryId) }}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="detail-display-category-badge">{{ categoryName(selectedItem.dish?.categoryId) }}</span>
+                </div>
                 <h1 class="detail-display-title">{{ selectedItem.dish?.name }}</h1>
-                <div class="detail-display-price">${{ price(selectedItem.dish?.price) }}</div>
+                <div class="detail-display-price">￥{{ price(selectedItem.dish?.price) }}</div>
                 <div class="detail-display-stock">当前剩余库存：<strong>{{ selectedItem.remainingStock ?? selectedItem.dailyStock }}</strong> 件</div>
               </div>
               <div class="dish-detail-right-col">
@@ -46,10 +50,15 @@
               <button type="button" class="m3-dialog-btn btn-text" @click="stockOpen = true">修改规则</button>
             </div>
             <div class="slide-to-remove-container">
-              <div class="slide-text">点击移出每日菜单</div>
-              <button type="button" class="slide-handle" @click="removeSelected">
+              <div class="slide-text">{{ slideOffset >= 200 ? '释放以确认移出' : '右滑移出每日菜单' }}</div>
+              <div
+                class="slide-handle"
+                :style="{ transform: 'translateX(' + slideOffset + 'px)', transition: isDragging ? 'none' : 'transform 0.2s ease-out' }"
+                @mousedown="handleDragStart"
+                @touchstart="handleDragStart"
+              >
                 <span class="material-symbols-outlined">delete</span>
-              </button>
+              </div>
             </div>
           </div>
           <div v-else class="detail-placeholder">
@@ -70,7 +79,7 @@
             <img :src="dishImage(dish)" class="list-item-avatar" :alt="dish.name" />
             <div class="list-item-text">
               <span class="list-item-title">{{ dish.name }}</span>
-              <span class="list-item-subtitle">{{ categoryName(dish.categoryId) }} · ${{ price(dish.price) }}</span>
+              <span class="list-item-subtitle">{{ categoryName(dish.categoryId) }} · ￥{{ price(dish.price) }}</span>
             </div>
             <md-checkbox :checked="checkedDishIds.includes(dish.dishId)"></md-checkbox>
           </div>
@@ -121,6 +130,10 @@ const addOpen = ref(false)
 const stockOpen = ref(false)
 const checkedDishIds = ref([])
 const stockValue = ref(50)
+
+const slideOffset = ref(0)
+const isDragging = ref(false)
+let startX = 0
 
 const filteredItems = computed(() => activeCategory.value === null ? items.value : items.value.filter(item => item.dish?.categoryId === activeCategory.value))
 const currentIds = computed(() => new Set(items.value.map(item => item.dishId)))
@@ -220,6 +233,40 @@ async function removeSelected() {
     toast.show(e.message || '移出失败', 'error')
   }
 }
+
+function handleDragStart(e) {
+  isDragging.value = true
+  startX = e.clientX || (e.touches ? e.touches[0].clientX : 0)
+  window.addEventListener('mousemove', handleDragMove)
+  window.addEventListener('touchmove', handleDragMove, { passive: false })
+  window.addEventListener('mouseup', handleDragEnd)
+  window.addEventListener('touchend', handleDragEnd)
+}
+
+function handleDragMove(e) {
+  if (!isDragging.value) return
+  const currentX = e.clientX || (e.touches ? e.touches[0].clientX : 0)
+  const deltaX = currentX - startX
+  slideOffset.value = Math.max(0, Math.min(deltaX, 228))
+}
+
+function handleDragEnd() {
+  if (!isDragging.value) return
+  isDragging.value = false
+  window.removeEventListener('mousemove', handleDragMove)
+  window.removeEventListener('touchmove', handleDragMove)
+  window.removeEventListener('mouseup', handleDragEnd)
+  window.removeEventListener('touchend', handleDragEnd)
+  
+  if (slideOffset.value >= 200) {
+    removeSelected()
+  }
+  slideOffset.value = 0
+}
+
+watch(activeCategory, () => {
+  selectedItem.value = filteredItems.value[0] || null
+})
 
 onMounted(async () => {
   try {

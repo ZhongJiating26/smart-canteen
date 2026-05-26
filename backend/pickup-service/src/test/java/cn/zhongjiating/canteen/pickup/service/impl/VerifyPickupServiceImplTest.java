@@ -64,4 +64,31 @@ class VerifyPickupServiceImplTest {
         verify(verifyRecordMapper).insert(any(VerifyRecord.class));
         verify(queueCacheService).rebuildWaiting(2001L);
     }
+
+    @Test
+    void manualVerifyByQrcodeIdCompletesOrderAndRemovesWaitingQueueItem() {
+        PickupQrcode qrcode = new PickupQrcode();
+        qrcode.setId(61L);
+        qrcode.setOrderId(9001L);
+        qrcode.setPickupCode("manual-code");
+        qrcode.setIsVerified(0);
+        WaitingQueueItem waiting = new WaitingQueueItem();
+        waiting.setId(71L);
+        waiting.setMerchantId(2001L);
+        waiting.setOrderId(9001L);
+        when(pickupQrcodeMapper.selectById(61L)).thenReturn(qrcode);
+        when(waitingQueueItemMapper.selectOne(any())).thenReturn(waiting);
+        when(orderFeignClient.complete(9001L)).thenReturn(Result.success());
+
+        VerifyPickupServiceImpl service = new VerifyPickupServiceImpl(pickupQrcodeMapper, waitingQueueItemMapper,
+                verifyRecordMapper, queueCacheService, webSocketPushService, orderFeignClient, new ObjectMapper());
+
+        assertThat(service.verify(2001L, new VerifyPickupRequest(2001L, null, "61", "MANUAL")).orderId())
+                .isEqualTo(9001L);
+        verify(orderFeignClient).complete(9001L);
+        verify(pickupQrcodeMapper).updateById(qrcode);
+        verify(waitingQueueItemMapper).deleteById(71L);
+        verify(verifyRecordMapper).insert(any(VerifyRecord.class));
+        verify(queueCacheService).rebuildWaiting(2001L);
+    }
 }

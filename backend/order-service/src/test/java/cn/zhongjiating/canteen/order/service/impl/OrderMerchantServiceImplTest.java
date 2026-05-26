@@ -31,6 +31,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,15 +60,15 @@ class OrderMerchantServiceImplTest {
     void acceptPaidOrderEnqueuesPreparingAndStoresPickupNo() {
         UserContextHolder.set(UserContext.of(1000002L, "merchant", RoleEnum.MERCHANT));
         Order order = order(OrderStatus.PAID);
+        order.setPickupNo("A001");
         when(menuFeignClient.merchantByUserId(1000002L)).thenReturn(Result.success(merchant()));
         when(orderMapper.selectById(8000001L)).thenReturn(order);
-        when(pickupFeignClient.enqueuePreparing(any())).thenReturn(Result.success(new PickupNoResponse(8000001L, "A001")));
-        when(orderMapper.markPreparing(any(), any(), any())).thenReturn(1);
+        when(orderMapper.markPreparing(any(), any())).thenReturn(1);
 
         OrderStatusVO result = service().accept(8000001L);
 
         ArgumentCaptor<OrderStatusLog> logCaptor = ArgumentCaptor.forClass(OrderStatusLog.class);
-        verify(orderMapper).markPreparing(8000001L, "A001", order.getAcceptTime());
+        verify(orderMapper).markPreparing(8000001L, order.getAcceptTime());
         verify(orderStatusLogMapper).insert(logCaptor.capture());
         assertThat(result.status()).isEqualTo(OrderStatus.PREPARING.getCode());
         assertThat(result.pickupNo()).isEqualTo("A001");
@@ -84,12 +85,11 @@ class OrderMerchantServiceImplTest {
         when(orderMapper.cancelIfStatus(any(), any(), any(), any())).thenReturn(1);
         when(orderItemMapper.selectByOrderId(8000001L)).thenReturn(List.of(orderItem()));
         when(menuFeignClient.release(any())).thenReturn(Result.success(new InventoryOperationResponse(true)));
-        when(pickupFeignClient.removeQueue(any())).thenReturn(Result.success());
 
         OrderStatusVO result = service().reject(8000001L);
 
         verify(menuFeignClient).release(any());
-        verify(pickupFeignClient).removeQueue(any());
+        verify(pickupFeignClient, never()).removeQueue(any());
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED.getCode());
         assertThat(order.getCancelReason()).isEqualTo("商家拒单");
     }

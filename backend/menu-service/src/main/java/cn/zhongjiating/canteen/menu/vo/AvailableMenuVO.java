@@ -8,7 +8,7 @@ import java.util.List;
 @Schema(description = "游客和用户可浏览菜单")
 public record AvailableMenuVO(List<MerchantMenuVO> merchants) {
 
-    public record MerchantMenuVO(Long merchantId, String merchantName, List<CategoryMenuVO> categories) {
+    public record MerchantMenuVO(Long merchantId, String merchantName, boolean operating, String operatingHours, List<CategoryMenuVO> categories, Integer monthlySales) {
     }
 
     public record CategoryMenuVO(Long categoryId, String categoryName, List<AvailableDishVO> dishes) {

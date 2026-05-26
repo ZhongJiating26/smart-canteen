@@ -32,6 +32,9 @@ public record AdminMerchantCreateRequest(
 
         @Schema(description = "经营类型", example = "盖浇饭")
         @Size(max = 50, message = "经营类型长度不能超过50")
-        String category
+        String category,
+
+        @Schema(description = "营业时间，JSON数组", example = "[{\"startTime\":\"08:00\",\"endTime\":\"10:00\"}]")
+        String operatingHours
 ) {
 }

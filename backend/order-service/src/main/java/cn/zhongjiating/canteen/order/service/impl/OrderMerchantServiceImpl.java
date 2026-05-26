@@ -69,17 +69,12 @@ public class OrderMerchantServiceImpl implements OrderMerchantService {
             throw new BusinessException(ErrorCode.ORDER_EXPIRED, "订单接单超时，已自动取消");
         }
 
-        Result<PickupNoResponse> pickupResult = pickupFeignClient.enqueuePreparing(
-                new PickupPreparingRequest(order.getMerchantId(), order.getId()));
-        PickupNoResponse pickup = requireRemoteData(pickupResult, "加入制作中队列失败");
-
         LocalDateTime acceptTime = LocalDateTime.now();
-        int rows = orderMapper.markPreparing(order.getId(), pickup.pickupNo(), acceptTime);
+        int rows = orderMapper.markPreparing(order.getId(), acceptTime);
         if (rows != 1) {
             throw new BusinessException(ErrorCode.ILLEGAL_STATUS);
         }
         order.setStatus(OrderStatus.PREPARING.getCode());
-        order.setPickupNo(pickup.pickupNo());
         order.setAcceptTime(acceptTime);
         writeStatusLog(order, OrderStatus.PAID, OrderStatus.PREPARING, merchant.user(), "商家接单");
         return OrderStatusVO.from(order);
@@ -173,7 +168,6 @@ public class OrderMerchantServiceImpl implements OrderMerchantService {
             throw new BusinessException(ErrorCode.ILLEGAL_STATUS);
         }
         releaseInventory(order.getId());
-        removeQueue(order);
         order.setStatus(OrderStatus.CANCELLED.getCode());
         order.setCancelReason(reason);
         order.setCancelTime(cancelTime);
@@ -192,13 +186,6 @@ public class OrderMerchantServiceImpl implements OrderMerchantService {
         InventoryOperationResponse response = requireRemoteData(result, "库存释放失败");
         if (!response.success()) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "库存释放失败");
-        }
-    }
-
-    private void removeQueue(Order order) {
-        Result<Void> result = pickupFeignClient.removeQueue(new PickupQueueRequest(order.getMerchantId(), order.getId()));
-        if (result == null || result.getCode() == null || result.getCode() != 200) {
-            throw remoteFailure(result, "取餐队列移除失败");
         }
     }
 

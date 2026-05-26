@@ -13,11 +13,12 @@ public interface OrderMapper extends BaseMapper<Order> {
             UPDATE `order`
             SET status = 'PAID',
                 pay_time = #{payTime},
+                pickup_no = #{pickupNo},
                 update_time = CURRENT_TIMESTAMP
             WHERE id = #{orderId}
               AND status = 'PENDING_PAY'
             """)
-    int markPaid(@Param("orderId") Long orderId, @Param("payTime") LocalDateTime payTime);
+    int markPaid(@Param("orderId") Long orderId, @Param("payTime") LocalDateTime payTime, @Param("pickupNo") String pickupNo);
 
     @Update("""
             UPDATE `order`
@@ -34,14 +35,12 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Update("""
             UPDATE `order`
             SET status = 'PREPARING',
-                pickup_no = #{pickupNo},
                 accept_time = #{acceptTime},
                 update_time = CURRENT_TIMESTAMP
             WHERE id = #{orderId}
               AND status = 'PAID'
             """)
-    int markPreparing(@Param("orderId") Long orderId, @Param("pickupNo") String pickupNo,
-                      @Param("acceptTime") LocalDateTime acceptTime);
+    int markPreparing(@Param("orderId") Long orderId, @Param("acceptTime") LocalDateTime acceptTime);
 
     @Update("""
             UPDATE `order`

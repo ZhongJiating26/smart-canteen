@@ -4,22 +4,22 @@
       <div class="login-header">
         <div class="logo-box"><span class="material-symbols-outlined logo-icon">shield_person</span></div>
         <span class="brand-title">Campus Eats</span>
-        <p class="login-subtitle">Administrator Console Sign In</p>
+        <p class="login-subtitle">管理员控制台登录</p>
       </div>
       <div class="form-card">
-        <h1 class="card-title">Sign In</h1>
+        <h1 class="card-title">登录</h1>
         <form class="auth-form" @submit.prevent="handleLogin">
-          <md-outlined-text-field :value="username" @input="username = $event.target.value" label="Admin ID / Email" required style="width:100%;">
+          <md-outlined-text-field :value="username" @input="username = $event.target.value" label="管理员账号 / 邮箱" required style="width:100%;">
             <span slot="trailing-icon" class="material-symbols-outlined">account_circle</span>
           </md-outlined-text-field>
-          <md-outlined-text-field :value="password" @input="password = $event.target.value" :type="showPwd ? 'text' : 'password'" label="Password" required style="width:100%;">
+          <md-outlined-text-field :value="password" @input="password = $event.target.value" :type="showPwd ? 'text' : 'password'" label="密码" required style="width:100%;">
             <span slot="trailing-icon" class="material-symbols-outlined eye-toggle" @click="showPwd = !showPwd">{{ showPwd ? 'visibility_off' : 'visibility' }}</span>
           </md-outlined-text-field>
-          <button type="submit" class="btn-primary" :disabled="loading">{{ loading ? 'Signing in...' : 'Sign In' }}</button>
+          <button type="submit" class="btn-primary" :disabled="loading">{{ loading ? '登录中...' : '登录' }}</button>
         </form>
       </div>
     </div>
-    <footer class="screen-footer"><p>© 2024 Campus Eats Ecosystem. All rights reserved.</p></footer>
+    <footer class="screen-footer"><p>© 2024 Campus Eats 生态系统。保留所有权利。</p></footer>
   </div>
 </template>
 
@@ -38,16 +38,16 @@ const loading = ref(false)
 
 async function handleLogin() {
   if (!username.value.trim() || !password.value) {
-    toast.show('Please fill all fields', 'warning')
+    toast.show('请填写所有字段', 'warning')
     return
   }
   loading.value = true
   try {
     await authStore.passwordLogin(username.value.trim(), password.value)
-    toast.show('Sign in successful!', 'check_circle')
+    toast.show('登录成功！', 'check_circle')
     router.replace('/dashboard')
   } catch (e) {
-    toast.show(e.message || 'Login failed', 'error')
+    toast.show(e.message || '登录失败', 'error')
   } finally { loading.value = false }
 }
 </script>

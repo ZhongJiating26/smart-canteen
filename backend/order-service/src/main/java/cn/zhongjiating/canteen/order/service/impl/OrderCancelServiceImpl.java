@@ -93,7 +93,9 @@ public class OrderCancelServiceImpl implements OrderCancelService {
             throw new BusinessException(ErrorCode.ILLEGAL_STATUS);
         }
         releaseInventory(order.getId());
-        removeQueue(order);
+        if (OrderStatus.PREPARING.getCode().equals(fromStatus)) {
+            removeQueue(order);
+        }
         order.setStatus(OrderStatus.CANCELLED.getCode());
         order.setCancelReason(reason);
         order.setCancelTime(cancelTime);

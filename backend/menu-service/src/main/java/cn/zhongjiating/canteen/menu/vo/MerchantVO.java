@@ -14,12 +14,13 @@ public record MerchantVO(
         String contactPhone,
         String category,
         Integer status,
+        String operatingHours,
         LocalDateTime createTime
 ) {
 
     public static MerchantVO from(Merchant merchant) {
         return new MerchantVO(merchant.getId(), merchant.getUserId(), merchant.getName(),
                 merchant.getContactName(), merchant.getContactPhone(), merchant.getCategory(),
-                merchant.getStatus(), merchant.getCreateTime());
+                merchant.getStatus(), merchant.getOperatingHours(), merchant.getCreateTime());
     }
 }

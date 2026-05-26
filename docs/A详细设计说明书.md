@@ -296,6 +296,7 @@ com.smartcanteen.common/
 | `contact_phone` | VARCHAR | 11 | 否 | 联系电话 |
 | `category` | VARCHAR | 50 | 否 | 经营类型/窗口分类 |
 | `status` | TINYINT | - | 是 | 1=正常, 0=停用 |
+| `operating_hours` | VARCHAR | 1000 | 否 | 营业时间，JSON 数组格式 |
 | `create_time` | DATETIME | - | 是 | 创建时间 |
 | `update_time` | DATETIME | - | 是 | 更新时间 |
 
@@ -953,7 +954,10 @@ com.smartcanteen.common/
   "data": {
     "merchants": [
       {
-        "merchantId": 2000001, "merchantName": "1号窗口",
+        "merchantId": 2000001,
+        "merchantName": "1号窗口",
+        "operating": true,
+        "operatingHours": "[{\"startTime\":\"00:00\",\"endTime\":\"23:59\"}]",
         "categories": [
           {
             "categoryId": 1, "categoryName": "主食",
@@ -972,12 +976,15 @@ com.smartcanteen.common/
 }
 ```
 
-**过滤逻辑：**
-1. 当前时间在对应 `meal_period` 售卖时段内
-2. `daily_menu.status = 1`
-3. `daily_menu_item.is_listed = 1`
-4. `daily_menu_item.remaining_stock > 0`
-5. `dish.status = 1`（未停用）
+**过滤与营业状态判定逻辑：**
+1. 系统查询所有状态为启用（`status = 1`）的商家窗口。
+2. 针对每个商家窗口，使用 `OperatingHoursUtil` 判定当前系统时间是否在其配置的营业时间段内（`operating_hours`，若为空或当前时间不在配置的时间段内则 `operating = false`，否则为 `true`）。
+3. 商家下的菜品展示过滤规则：
+   - 属于已发布的每日菜单（`daily_menu.status = 1`）。
+   - 菜品处于上架状态（`daily_menu_item.is_listed = 1`）。
+   - 菜品剩余库存大于 0（`daily_menu_item.remaining_stock > 0`）。
+   - 菜品未被逻辑删除或停用（`dish.status = 1`）。
+4. 若当前时间不属于常规售卖时段（如早餐、午餐、晚餐），为支持商家在营业时间内可浏览，系统会使用默认兜底时段（如 LUNCH）加载菜单，确保用户可浏览菜单。但如果 `operating = false`，用户端控制不可加入购物车。
 
 #### 4.2.6 库存预占（Feign 内部接口）
 
@@ -1475,7 +1482,7 @@ com.smartcanteen.common/
 ```
 
 **说明：**
-1. 解析二维码内容或直接使用取餐码
+1. 解析二维码内容或直接使用取餐码。对于手动输入核销（`MANUAL`），系统会先尝试将输入解析为 Long 类型的数字主键（即 `pickup_qrcode.id`），通过 `selectById` 进行快速定位；若解析失败或未匹配到记录，则回退为通过 `pickup_code`（UUID 字符串）进行查询。
 2. 校验取餐码有效性：存在、未核销、对应订单状态为 `READY`
 3. 校验窗口归属
 4. 标记二维码已核销、订单状态→`COMPLETED`（调用 order-service Feign）

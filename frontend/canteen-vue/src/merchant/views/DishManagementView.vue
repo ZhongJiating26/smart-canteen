@@ -20,7 +20,7 @@
             <img class="list-item-avatar" :src="dishImage(dish)" :alt="dish.name" />
             <div class="list-item-text">
               <span class="list-item-title">{{ dish.name }}</span>
-              <span class="list-item-subtitle" :style="stockStyle(dish)">{{ stockText(dish) }} · ${{ price(dish.price) }}</span>
+              <span class="list-item-subtitle" :style="stockStyle(dish)">{{ stockText(dish) }} · ￥{{ price(dish.price) }}</span>
             </div>
             <span v-if="dish.status !== 1" class="list-item-status-tag">下架</span>
           </div>
@@ -42,7 +42,7 @@
                   </span>
                 </div>
                 <h1 class="detail-display-title">{{ selectedDish.name }}</h1>
-                <div class="detail-display-price">${{ price(selectedDish.price) }}</div>
+                <div class="detail-display-price">￥{{ price(selectedDish.price) }}</div>
                 <div class="detail-display-stock">剩余库存：<strong>{{ remainingStock(selectedDish) }}</strong> 件</div>
               </div>
               <div class="dish-detail-right-col">
@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, reactive, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref, watch } from 'vue'
 import { getCurrentMerchant, getCategories, createCategory, getDishes, createDish, updateDish, deleteDish, uploadDishImage, getDailyMenus, saveDailyMenu, updateDailyMenuItems } from '@common/api/menuApi'
 
 const toast = inject('toast')
@@ -153,6 +153,10 @@ const saving = ref(false)
 const form = reactive({ name: '', price: '', stock: 50, categoryId: null, description: '', available: true })
 
 const filteredDishes = computed(() => activeCategory.value === null ? dishes.value : dishes.value.filter(dish => dish.categoryId === activeCategory.value))
+
+watch(activeCategory, () => {
+  selectedDish.value = filteredDishes.value[0] || null
+})
 
 function price(value) {
   return Number(value || 0).toFixed(2)

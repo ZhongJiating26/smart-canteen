@@ -26,7 +26,7 @@
     <div class="rail-footer">
       <div class="rail-item logout-item" @click="handleLogout">
         <div class="rail-icon-wrapper"><span class="material-symbols-outlined">logout</span></div>
-        <span class="rail-label" style="color:var(--color-brand-rust);">Logout</span>
+        <span class="rail-label" style="color:var(--color-brand-rust);">退出登录</span>
       </div>
     </div>
   </nav>
@@ -48,8 +48,7 @@ const navItems = [
   { view: 'OrderKanban', label: '订单处理', icon: 'pending_actions', badge: true },
   { view: 'DishManagement', label: '菜品管理', icon: 'restaurant_menu' },
   { view: 'DailyMenu', label: '每日菜单', icon: 'calendar_today' },
-  { view: 'OrderHistory', label: '历史订单', icon: 'history' },
-  { view: 'StoreConfig', label: '店铺信息', icon: 'store' }
+  { view: 'OrderHistory', label: '历史订单', icon: 'history' }
 ]
 
 const currentView = computed(() => route.name)
@@ -59,15 +58,14 @@ function goTo(view) {
     OrderKanban: '/orders',
     DishManagement: '/dishes',
     DailyMenu: '/daily-menu',
-    OrderHistory: '/history',
-    StoreConfig: '/store'
+    OrderHistory: '/history'
   }
   router.push(pathMap[view])
 }
 
 async function handleLogout() {
   await authStore.doLogout()
-  toast.show('Logged out!', 'check_circle')
+  toast.show('已成功退出登录！', 'check_circle')
   router.push('/login')
 }
 

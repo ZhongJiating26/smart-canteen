@@ -11,7 +11,7 @@
     </div>
     <div class="table-card">
       <table class="data-table">
-        <thead><tr><th>窗口 ID</th><th>关联账号</th><th>窗口美食名称</th><th>档口负责人</th><th>联系电话</th><th>主营分类</th><th>营业状态</th><th style="text-align:right">操作</th></tr></thead>
+        <thead><tr><th>窗口 ID</th><th>关联账号</th><th>窗口美食名称</th><th>档口负责人</th><th>联系电话</th><th>主营分类</th><th>营业时间</th><th>营业状态</th><th style="text-align:right">操作</th></tr></thead>
         <tbody>
           <tr v-for="merchant in filteredMerchants" :key="merchant.merchantId">
             <td><strong>{{ merchant.merchantId }}</strong></td>
@@ -20,6 +20,7 @@
             <td>{{ merchant.contactName }}</td>
             <td>{{ merchant.contactPhone }}</td>
             <td>{{ merchant.category }}</td>
+            <td>{{ formatOperatingHours(merchant.operatingHours) }}</td>
             <td><span class="status-badge" :class="merchant.status === 1 ? 'active' : 'disabled'">{{ merchant.status === 1 ? '正常营运' : '停用中' }}</span></td>
             <td style="text-align:right">
               <button class="btn-table-action" @click="openEdit(merchant)">编辑</button>
@@ -48,6 +49,35 @@
             <md-outlined-text-field :value="form.phone" @input="form.phone = $event.target.value" label="登录账户手机号" required></md-outlined-text-field>
             <md-outlined-text-field :value="form.password" @input="form.password = $event.target.value" label="初始登录密码" type="password" required></md-outlined-text-field>
           </template>
+          
+          <div class="operating-hours-section">
+            <div class="account-divider"><strong>营业时间段配置</strong></div>
+            <div v-for="(range, idx) in form.operatingHoursList" :key="idx" class="operating-hours-row" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <md-outlined-text-field
+                type="time"
+                :value="range.startTime"
+                @input="range.startTime = $event.target.value"
+                label="开始时间"
+                required
+                style="flex: 1; --md-outlined-text-field-container-shape: 8px;"
+              ></md-outlined-text-field>
+              <span style="color: var(--color-text-secondary); font-weight: 500;">至</span>
+              <md-outlined-text-field
+                type="time"
+                :value="range.endTime"
+                @input="range.endTime = $event.target.value"
+                label="结束时间"
+                required
+                style="flex: 1; --md-outlined-text-field-container-shape: 8px;"
+              ></md-outlined-text-field>
+              <button type="button" class="btn-table-action action-danger" style="padding:8px 16px;height:56px;border-radius:8px;margin-top:0;" @click="removeOperatingHour(idx)">
+                删除
+              </button>
+            </div>
+            <button type="button" class="btn-table-action action-success" style="padding:6px 12px;display:flex;align-items:center;gap:4px;" @click="addOperatingHour">
+              <span class="material-symbols-outlined" style="font-size:16px;">add</span><span>添加时间段</span>
+            </button>
+          </div>
         </form>
       </div>
       <div class="m3-dialog-actions">
@@ -69,7 +99,7 @@ const statusFilter = ref('')
 const showDialog = ref(false)
 const editingMerchant = ref(null)
 const categories = ['面点主食', '沙拉轻食', '西式烧烤', '中式快餐', '甜品饮品']
-const form = reactive({ name: '', contactName: '', contactPhone: '', category: categories[0], phone: '', password: '123456', status: 1 })
+const form = reactive({ name: '', contactName: '', contactPhone: '', category: categories[0], phone: '', password: '123456', status: 1, operatingHoursList: [] })
 const filteredMerchants = computed(() => merchants.value.filter(merchant => {
   const query = searchQuery.value.toLowerCase()
   return (!query || (merchant.name || '').toLowerCase().includes(query) || (merchant.contactName || '').toLowerCase().includes(query))
@@ -81,24 +111,55 @@ async function fetchMerchants() {
     merchants.value = data?.records || []
   } catch (e) { merchants.value = [] }
 }
+function formatOperatingHours(json) {
+  if (!json) return '未配置'
+  try {
+    const list = JSON.parse(json)
+    if (!list || !list.length) return '未配置'
+    return list.map(range => `${range.startTime}-${range.endTime}`).join(', ')
+  } catch (e) {
+    return '格式错误'
+  }
+}
+function addOperatingHour() {
+  form.operatingHoursList.push({ startTime: '09:00', endTime: '21:00' })
+}
+function removeOperatingHour(index) {
+  form.operatingHoursList.splice(index, 1)
+}
 function openAdd() {
   editingMerchant.value = null
-  Object.assign(form, { name: '', contactName: '', contactPhone: '', category: categories[0], phone: '', password: '123456', status: 1 })
+  Object.assign(form, { name: '', contactName: '', contactPhone: '', category: categories[0], phone: '', password: '123456', status: 1, operatingHoursList: [{ startTime: '09:00', endTime: '21:00' }] })
   showDialog.value = true
 }
 function openEdit(merchant) {
   editingMerchant.value = merchant
   Object.assign(form, merchant)
+  let list = [];
+  try {
+    list = JSON.parse(merchant.operatingHours || '[]');
+  } catch (e) {
+    list = [];
+  }
+  form.operatingHoursList = list;
   showDialog.value = true
 }
 function closeDialog() { showDialog.value = false }
 async function saveMerchant() {
   try {
+    const payload = {
+      name: form.name,
+      contactName: form.contactName,
+      contactPhone: form.contactPhone,
+      category: form.category,
+      status: form.status,
+      operatingHours: JSON.stringify(form.operatingHoursList)
+    }
     if (editingMerchant.value) {
-      await request.put(`/admin/merchants/${editingMerchant.value.merchantId}`, { name: form.name, contactName: form.contactName, contactPhone: form.contactPhone, category: form.category, status: form.status })
+      await request.put(`/admin/merchants/${editingMerchant.value.merchantId}`, payload)
       toast.show('窗口配置已保存', 'check_circle')
     } else {
-      await request.post('/admin/merchants', { ...form, contactPhone: form.contactPhone || form.phone })
+      await request.post('/admin/merchants', { ...payload, phone: form.phone, password: form.password })
       toast.show('商家窗口已创建', 'check_circle')
     }
     closeDialog()

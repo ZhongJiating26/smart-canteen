@@ -56,7 +56,7 @@ public class AdminMerchantServiceImpl implements AdminMerchantService {
         }
         Merchant merchant = new Merchant();
         merchant.setUserId(account.userId());
-        apply(request.name(), request.contactName(), request.contactPhone(), request.category(), merchant);
+        apply(request.name(), request.contactName(), request.contactPhone(), request.category(), request.operatingHours(), merchant);
         merchant.setStatus(1);
         merchantMapper.insert(merchant);
         return MerchantVO.from(merchant);
@@ -69,17 +69,20 @@ public class AdminMerchantServiceImpl implements AdminMerchantService {
         if (merchant == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "商家窗口不存在");
         }
-        apply(request.name(), request.contactName(), request.contactPhone(), request.category(), merchant);
+        apply(request.name(), request.contactName(), request.contactPhone(), request.category(), request.operatingHours(), merchant);
         merchant.setStatus(request.status());
         merchantMapper.updateById(merchant);
         return MerchantVO.from(merchant);
     }
 
-    private void apply(String name, String contactName, String contactPhone, String category, Merchant merchant) {
+    private void apply(String name, String contactName, String contactPhone, String category, String operatingHours, Merchant merchant) {
         merchant.setName(name.trim());
         merchant.setContactName(normalizeBlank(contactName));
         merchant.setContactPhone(normalizeBlank(contactPhone));
         merchant.setCategory(normalizeBlank(category));
+        if (operatingHours != null) {
+            merchant.setOperatingHours(normalizeBlank(operatingHours));
+        }
     }
 
     private String normalizeBlank(String value) {

@@ -5,7 +5,7 @@
       <header class="workspace-header">
         <div class="header-left">
           <h2 class="workspace-title">{{ currentTitle }}</h2>
-          <span class="system-status-chip online">System Online</span>
+          <span class="system-status-chip online">系统在线</span>
         </div>
         <div class="header-right">
           <button type="button" class="icon-action-btn" title="刷新数据" @click="refreshKey += 1">
@@ -14,8 +14,8 @@
           <div class="admin-profile-badge">
             <span class="material-symbols-outlined profile-avatar-icon">shield_person</span>
             <div class="profile-meta">
-              <span class="profile-name">{{ authStore.nickname || 'Admin (Root)' }}</span>
-              <span class="profile-role">System Admin</span>
+              <span class="profile-name">{{ authStore.nickname || '管理员 (根账号)' }}</span>
+              <span class="profile-role">系统管理员</span>
             </div>
           </div>
         </div>
@@ -51,9 +51,7 @@ const titleMap = {
   Dashboard: '仪表盘',
   UserManagement: '用户管理',
   MerchantManagement: '商家窗口管理',
-  SystemConfig: '系统配置',
-  OperationLogs: '操作日志',
-  AbnormalOrders: '异常订单处理'
+  SystemConfig: '系统配置'
 }
 
 const currentTitle = computed(() => {

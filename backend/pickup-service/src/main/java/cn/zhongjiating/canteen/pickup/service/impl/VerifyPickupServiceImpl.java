@@ -56,8 +56,19 @@ public class VerifyPickupServiceImpl implements VerifyPickupService {
     public VerifyPickupVO verify(Long operatorId, VerifyPickupRequest request) {
         VerifyType verifyType = verifyType(request.verifyType());
         String pickupCode = pickupCode(request, verifyType);
-        PickupQrcode qrcode = pickupQrcodeMapper.selectOne(new LambdaQueryWrapper<PickupQrcode>()
-                .eq(PickupQrcode::getPickupCode, pickupCode));
+        PickupQrcode qrcode = null;
+        if (verifyType == VerifyType.MANUAL) {
+            try {
+                Long qrcodeId = java.lang.Long.parseLong(pickupCode);
+                qrcode = pickupQrcodeMapper.selectById(qrcodeId);
+            } catch (NumberFormatException e) {
+                // Ignore and fallback
+            }
+        }
+        if (qrcode == null) {
+            qrcode = pickupQrcodeMapper.selectOne(new LambdaQueryWrapper<PickupQrcode>()
+                    .eq(PickupQrcode::getPickupCode, pickupCode));
+        }
         if (qrcode == null || qrcode.getIsVerified() == 1) {
             throw new BusinessException(ErrorCode.INVALID_PICKUP_CODE);
         }

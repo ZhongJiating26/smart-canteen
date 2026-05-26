@@ -8,7 +8,7 @@
       <div class="nav-pill">
         <span class="material-symbols-outlined">restaurant</span>
       </div>
-      <span class="nav-label">Menu</span>
+      <span class="nav-label">点餐</span>
     </div>
     <div
       class="nav-tab"
@@ -18,7 +18,7 @@
       <div class="nav-pill">
         <span class="material-symbols-outlined">receipt</span>
       </div>
-      <span class="nav-label">Orders</span>
+      <span class="nav-label">订单</span>
     </div>
     <div
       class="nav-tab"
@@ -28,7 +28,7 @@
       <div class="nav-pill">
         <span class="material-symbols-outlined">person</span>
       </div>
-      <span class="nav-label">Profile</span>
+      <span class="nav-label">我的</span>
     </div>
   </div>
 </template>

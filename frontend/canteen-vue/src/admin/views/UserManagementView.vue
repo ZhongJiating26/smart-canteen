@@ -35,7 +35,7 @@
             <td><strong>#{{ user.userId }}</strong></td>
             <td>{{ user.username || user.phone }}</td>
             <td>{{ user.nickname || '-' }}</td>
-            <td><span class="role-badge" :class="user.role?.toLowerCase()">{{ user.role }}</span></td>
+            <td><span class="role-badge" :class="user.role?.toLowerCase()">{{ user.role === 'ADMIN' ? '管理员' : user.role === 'MERCHANT' ? '商家' : '用户' }}</span></td>
             <td><span class="status-badge" :class="user.status === 1 ? 'active' : 'disabled'">{{ user.status === 1 ? '正常' : '禁用' }}</span></td>
             <td>{{ user.createTime || '-' }}</td>
             <td style="text-align:right">
@@ -49,7 +49,7 @@
       </table>
     </div>
     <div class="table-pagination">
-      <span class="pagination-info">Showing {{ start }} to {{ end }} of {{ filteredUsers.length }} users</span>
+      <span class="pagination-info">显示第 {{ start }} 至 {{ end }} 项，共 {{ filteredUsers.length }} 名用户</span>
       <div class="pagination-controls">
         <button class="page-btn" :disabled="page === 0" @click="page -= 1"><span class="material-symbols-outlined">chevron_left</span></button>
         <button class="page-btn" :disabled="end >= filteredUsers.length" @click="page += 1"><span class="material-symbols-outlined">chevron_right</span></button>
@@ -70,7 +70,7 @@
         <div class="drawer-info-grid">
           <div class="info-item"><span class="info-label">用户 ID</span><span class="info-value">#{{ selectedUser.userId }}</span></div>
           <div class="info-item"><span class="info-label">登录账号</span><span class="info-value">{{ selectedUser.username || selectedUser.phone }}</span></div>
-          <div class="info-item"><span class="info-label">系统角色</span><span class="info-value">{{ selectedUser.role }}</span></div>
+          <div class="info-item"><span class="info-label">系统角色</span><span class="info-value">{{ selectedUser.role === 'ADMIN' ? '管理员' : selectedUser.role === 'MERCHANT' ? '商家' : '用户' }}</span></div>
           <div class="info-item"><span class="info-label">注册时间</span><span class="info-value">{{ selectedUser.createTime || '-' }}</span></div>
         </div>
       </div>

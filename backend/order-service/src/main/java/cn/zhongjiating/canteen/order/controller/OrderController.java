@@ -13,6 +13,7 @@ import cn.zhongjiating.canteen.order.vo.CreateOrderVO;
 import cn.zhongjiating.canteen.order.vo.OrderDetailVO;
 import cn.zhongjiating.canteen.order.vo.OrderStatusVO;
 import cn.zhongjiating.canteen.order.vo.OrderSummaryVO;
+import cn.zhongjiating.canteen.order.vo.UserOrderStatisticsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -81,5 +82,11 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public Result<OrderDetailVO> detail(@PathVariable Long orderId) {
         return Result.success(orderQueryService.detail(orderId));
+    }
+
+    @Operation(summary = "查询我的订单统计数据")
+    @GetMapping("/my/statistics")
+    public Result<UserOrderStatisticsVO> getMyStatistics() {
+        return Result.success(orderQueryService.getMyStatistics());
     }
 }

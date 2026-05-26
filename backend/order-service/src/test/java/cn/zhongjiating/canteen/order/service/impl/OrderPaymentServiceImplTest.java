@@ -34,6 +34,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import cn.zhongjiating.canteen.order.feign.PickupFeignClient;
+import cn.zhongjiating.canteen.order.dto.PickupNoResponse;
+import org.mockito.Mockito;
+
 @ExtendWith(MockitoExtension.class)
 class OrderPaymentServiceImplTest {
 
@@ -49,6 +53,8 @@ class OrderPaymentServiceImplTest {
     private OrderCancelService orderCancelService;
     @Mock
     private OrderTimeoutMessagePublisher timeoutMessagePublisher;
+    @Mock
+    private PickupFeignClient pickupFeignClient;
 
     @AfterEach
     void clearContext() {
@@ -61,7 +67,8 @@ class OrderPaymentServiceImplTest {
         Order order = pendingOrder(LocalDateTime.now());
         when(orderMapper.selectById(8000001L)).thenReturn(order);
         when(userFeignClient.verifyPayPassword(any())).thenReturn(Result.success(new PayPasswordVerifyResponse(true)));
-        when(orderMapper.markPaid(any(), any())).thenReturn(1);
+        when(pickupFeignClient.enqueuePreparing(any())).thenReturn(Result.success(new PickupNoResponse(8000001L, "A001")));
+        when(orderMapper.markPaid(any(), any(), any())).thenReturn(1);
 
         OrderStatusVO result = service().pay(8000001L, new PayOrderRequest("123456"));
 
@@ -70,6 +77,7 @@ class OrderPaymentServiceImplTest {
         verify(timeoutMessagePublisher).publishAcceptTimeout(order);
         assertThat(result.status()).isEqualTo(OrderStatus.PAID.getCode());
         assertThat(order.getPayTime()).isNotNull();
+        assertThat(order.getPickupNo()).isEqualTo("A001");
         assertThat(logCaptor.getValue().getFromStatus()).isEqualTo(OrderStatus.PENDING_PAY.getCode());
         assertThat(logCaptor.getValue().getToStatus()).isEqualTo(OrderStatus.PAID.getCode());
         assertThat(logCaptor.getValue().getOperatorId()).isEqualTo(1000001L);
@@ -91,7 +99,7 @@ class OrderPaymentServiceImplTest {
 
     private OrderPaymentServiceImpl service() {
         return new OrderPaymentServiceImpl(orderMapper, orderStatusLogMapper, orderConfigMapper, userFeignClient,
-                orderCancelService, timeoutMessagePublisher);
+                orderCancelService, timeoutMessagePublisher, pickupFeignClient);
     }
 
     private Order pendingOrder(LocalDateTime createTime) {

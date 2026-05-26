@@ -29,6 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+import cn.zhongjiating.canteen.order.feign.PickupFeignClient;
+import cn.zhongjiating.canteen.order.dto.PickupPreparingRequest;
+import cn.zhongjiating.canteen.order.dto.PickupNoResponse;
+
 @Service
 public class OrderPaymentServiceImpl implements OrderPaymentService {
 
@@ -40,17 +44,20 @@ public class OrderPaymentServiceImpl implements OrderPaymentService {
     private final UserFeignClient userFeignClient;
     private final OrderCancelService orderCancelService;
     private final OrderTimeoutMessagePublisher timeoutMessagePublisher;
+    private final PickupFeignClient pickupFeignClient;
 
     public OrderPaymentServiceImpl(OrderMapper orderMapper, OrderStatusLogMapper orderStatusLogMapper,
                                    OrderConfigMapper orderConfigMapper, UserFeignClient userFeignClient,
                                    OrderCancelService orderCancelService,
-                                   OrderTimeoutMessagePublisher timeoutMessagePublisher) {
+                                   OrderTimeoutMessagePublisher timeoutMessagePublisher,
+                                   PickupFeignClient pickupFeignClient) {
         this.orderMapper = orderMapper;
         this.orderStatusLogMapper = orderStatusLogMapper;
         this.orderConfigMapper = orderConfigMapper;
         this.userFeignClient = userFeignClient;
         this.orderCancelService = orderCancelService;
         this.timeoutMessagePublisher = timeoutMessagePublisher;
+        this.pickupFeignClient = pickupFeignClient;
     }
 
     @Override
@@ -67,13 +74,21 @@ public class OrderPaymentServiceImpl implements OrderPaymentService {
         }
         verifyPayPassword(user.getUserId(), request.payPassword());
 
+        Result<PickupNoResponse> pickupResult = pickupFeignClient.enqueuePreparing(
+                new PickupPreparingRequest(order.getMerchantId(), order.getId()));
+        if (pickupResult == null || pickupResult.getCode() == null || pickupResult.getCode() != 200 || pickupResult.getData() == null) {
+            throw RemoteResultErrors.toBusinessException(pickupResult, "生成取餐号失败");
+        }
+        String pickupNo = pickupResult.getData().pickupNo();
+
         LocalDateTime payTime = LocalDateTime.now();
-        int rows = orderMapper.markPaid(order.getId(), payTime);
+        int rows = orderMapper.markPaid(order.getId(), payTime, pickupNo);
         if (rows != 1) {
             throw new BusinessException(ErrorCode.ILLEGAL_STATUS);
         }
         order.setStatus(OrderStatus.PAID.getCode());
         order.setPayTime(payTime);
+        order.setPickupNo(pickupNo);
         writeStatusLog(order, user);
         timeoutMessagePublisher.publishAcceptTimeout(order);
         return OrderStatusVO.from(order);
