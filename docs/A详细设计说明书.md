@@ -575,10 +575,10 @@ com.smartcanteen.common/
 
 **Tag 定义：**
 
-| Tag | 说明 | 延迟级别 | 延迟时间 |
+| Tag | 说明 | 延时方式 | 延迟时间 |
 |-----|------|---------|---------|
-| `pay_timeout` | 待支付超时 | level 14 (≈10min) | 10min |
-| `accept_timeout` | 商家接单超时 | level 14 (≈10min) | 10min |
+| `pay_timeout` | 待支付超时 | 任意延时 (指定投递时间戳) | 10min |
+| `accept_timeout` | 商家接单超时 | 任意延时 (指定投递时间戳) | 10min |
 
 **消息体（JSON）：**
 
@@ -1870,10 +1870,10 @@ flowchart TD
 
 **消息发送：**
 
-| 时机 | Topic | Tag | 延迟级别 |
+| 时机 | Topic | Tag | 延时方式 |
 |------|-------|-----|---------|
-| 订单创建后 | `order-timeout` | `pay_timeout` | level 14 (≈10min) |
-| 支付成功后 | `order-timeout` | `accept_timeout` | level 14 (≈10min) |
+| 订单创建后 | `order-timeout` | `pay_timeout` | 任意延时 (指定投递时间戳) |
+| 支付成功后 | `order-timeout` | `accept_timeout` | 任意延时 (指定投递时间戳) |
 
 **消息消费逻辑：**
 
@@ -1893,7 +1893,7 @@ flowchart TD
     I -- 否 --> M[ACK 忽略]
 ```
 
-**说明：** RocketMQ level 14（≈10min）只作为延迟触发器，最终是否取消以消费时读取的配置时间（`pay_timeout_minutes` / `accept_timeout_minutes`）和订单状态为准。管理员修改超时配置后即时生效，RocketMQ 延迟级别不需同步修改。定时扫描任务作为配置变化和消息误差的兜底机制。
+**说明：** RocketMQ 延时只作为延迟触发器（基于 5.x 任意精度延时消息投递机制），最终是否取消以消费时读取的配置时间（`pay_timeout_minutes` / `accept_timeout_minutes`）和订单状态为准。管理员修改超时配置后即时生效，不需调整消息发送机制。定时扫描任务作为配置变化和消息误差的兜底机制。
 
 **定时扫描任务（兜底）：** 每分钟执行一次，超时阈值从配置中读取（默认 10 分钟）。使用 MyBatis 动态 SQL 传入配置值，避免 SQL 中硬编码时间。使用分布式锁（Redis SETNX）保证多实例下只有一个执行。
 

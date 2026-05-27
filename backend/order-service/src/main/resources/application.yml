@@ -41,7 +41,6 @@ canteen:
     timeout:
       topic: ${ORDER_TIMEOUT_TOPIC:order-timeout}
       consumer-group: ${ORDER_TIMEOUT_CONSUMER_GROUP:order-timeout-consumer}
-      delay-level: ${ORDER_TIMEOUT_DELAY_LEVEL:14}
       scan-fixed-delay-ms: ${ORDER_TIMEOUT_SCAN_FIXED_DELAY_MS:60000}
 
 mybatis-plus:

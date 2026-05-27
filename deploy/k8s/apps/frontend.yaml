@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-nginx
+  namespace: canteen
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-nginx
+  namespace: canteen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-nginx
+  template:
+    metadata:
+      labels:
+        app: frontend-nginx
+    spec:
+      containers:
+        - name: frontend-nginx
+          image: k3d-smart-canteen-registry:5000/frontend-nginx:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
