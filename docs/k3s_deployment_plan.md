@@ -1684,7 +1684,10 @@ kubectl apply -f ../k8s/ingress.yaml
 ```powershell
 cd deploy/scripts
 .\apply-all.ps1
+.\check-all.ps1
 ```
+
+其中 `check-all.ps1` 会等待基础组件和业务 Deployment 就绪，并输出 Pod、Service、PVC 与 Ingress 当前状态，用于部署后的快速验收。
 
 ## 24. 部署验证
 
