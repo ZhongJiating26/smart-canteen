@@ -4,7 +4,7 @@
 
 ### 1.1 项目背景
 
-本系统面向校园/园区场景，为用户提供在线点餐、商家接单备餐、扫码取餐、食堂大屏实时展示的一站式餐饮服务。系统采用 Spring Cloud 微服务架构，全栈（包括前端 Vue3 应用、后端微服务及所有中间件）统一容器化部署在 K3s (K3d) 本地集群中，解决传统食堂点餐排队信息不透明、人工叫号效率低、库存管理粗放等问题。
+本系统面向校园/园区场景，为用户提供在线点餐、商家接单备餐、扫码取餐、食堂大屏实时展示的一站式餐饮服务。系统采用 Spring Cloud 微服务架构，部署上采用 Docker Compose + K3s (K3d) 的混合模式：MySQL、Redis、RocketMQ、Nacos、Seata 等基础组件继续由 Docker Compose 运行，前端 Vue3 应用与后端微服务部署在 K3s 中，解决传统食堂点餐排队信息不透明、人工叫号效率低、库存管理粗放等问题。
 
 ### 1.2 项目概述
 
@@ -21,7 +21,8 @@
 | JWT | 双 Token 机制（access_token 2h + refresh_token 7d） |
 | Seata AT | 下单扣库存分布式事务方案 |
 | RocketMQ | 订单超时延迟消息中间件 |
-| K3s / K3d | 轻量级 Kubernetes 发行版及容器化集群管理工具，全栈容器化部署平台 |
+| K3s / K3d | 轻量级 Kubernetes 发行版及容器化集群管理工具，承载前端和后端微服务 |
+| Docker Compose | 本地基础组件编排工具，承载 MySQL、Redis、Nacos、RocketMQ、Seata |
 | Material 3 | 前端 UI 风格（大屏端除外） |
 
 ### 1.4 参考资料
@@ -38,7 +39,7 @@
 
 系统采用 6 层架构：客户端层、接入层（Ingress）、网关层、服务层、基础能力层、外部系统层。客户端通过 K3d 的 Traefik Ingress 负载均衡器接入集群，Ingress 根据 URL 路径实现同源分流，减少浏览器跨域配置。网关作为后端统一入口进行鉴权和路由，4 个业务微服务构成服务层，各服务拥有独立的数据 Schema 与访问边界。
 
-基础能力层提供注册发现、持久化、缓存、消息和分布式事务支撑。课程演示环境中的基础支撑组件以单副本 Kubernetes **StatefulSet（有状态副本集）** 部署；MySQL、Redis、Nacos、RocketMQ Broker 与 Seata Server 按部署清单绑定 **PVC（持久化卷声明）**，RocketMQ NameServer 保持单实例无状态运行。
+基础能力层提供注册发现、持久化、缓存、消息和分布式事务支撑。课程演示环境中的基础支撑组件不再部署到 K3s，而是继续使用 Docker Compose 单机运行并通过宿主机端口暴露给 K3s Pod；K3s 只负责前端 Nginx、Gateway 和业务微服务的应用层编排。
 
 ### 2.2 总体架构图
 
@@ -64,12 +65,12 @@ graph TD
         PS[Pickup Service Pod :9004]
     end
 
-    subgraph infra 基础设施命名空间
-        N[Nacos StatefulSet]
-        DB[(MySQL StatefulSet + PVC)]
-        R[(Redis StatefulSet + PVC)]
-        MQ[RocketMQ NameServer + Broker<br/>Broker PVC]
-        SE[Seata Server StatefulSet + PVC]
+    subgraph Docker Compose 基础组件
+        N[Nacos :8148]
+        DB[(MySQL :3106)]
+        R[(Redis :6179)]
+        MQ[RocketMQ NameServer :9176<br/>Broker :11911]
+        SE[Seata Server :8191]
     end
 
     %% 客户端到集群入口
@@ -87,7 +88,7 @@ graph TD
     OS --> MS & US & PS
     PS --> OS
 
-    %% 跨Namespace访问基础设施（利用K8s DNS）
+    %% 通过宿主机映射端口访问 Compose 基础设施
     GW & US & MS & OS & PS -.->|注册与发现| N
     GW & US & MS & OS & PS -.->|缓存 / 限流 / Token| R
     US & MS & OS & PS -.->|各自 Schema| DB
@@ -138,13 +139,13 @@ graph TD
 
 ### 3.3 基础组件选型及部署声明
 
-| **组件** | **部署版本** | **用途**                                     | **部署方式（K3s/K3d）**         |
+| **组件** | **部署版本** | **用途**                                     | **部署方式**                    |
 | -------- | ------------ | -------------------------------------------- | ------------------------------- |
-| Nacos    | 2.3.2        | 服务注册与发现，保留配置中心扩展能力         | StatefulSet + PVC + Service     |
-| Redis    | 7.2          | 验证码、Token 黑名单、限流计数、队列快照缓存 | StatefulSet + PVC + Service     |
-| RocketMQ | 5.2.0        | 订单超时延迟消息                             | 单 NameServer + 单 Broker StatefulSet；Broker PVC |
-| Seata Server | 1.7.1   | 分布式事务服务器（AT 模式）                  | StatefulSet + PVC + Service     |
-| MySQL    | 8.0.44       | 业务数据持久化                               | StatefulSet + PVC + Service     |
+| Nacos    | 2.3.2        | 服务注册与发现，保留配置中心扩展能力         | Docker Compose，宿主机端口 8148 |
+| Redis    | 7.2          | 验证码、Token 黑名单、限流计数、队列快照缓存 | Docker Compose，宿主机端口 6179 |
+| RocketMQ | 5.2.0        | 订单超时延迟消息                             | Docker Compose，NameServer 9176，Broker 11911 |
+| Seata Server | 1.7.1   | 分布式事务服务器（AT 模式）                  | Docker Compose，宿主机端口 8191 |
+| MySQL    | 8.0.44       | 业务数据持久化                               | Docker Compose，宿主机端口 3106 |
 
 ## 四、微服务划分设计
 
@@ -221,10 +222,11 @@ graph LR
 
 ### 5.2 注册与配置中心设计
 
-Nacos 以 standalone 方式部署于 `infra` 命名空间。当前版本主要使用 Nacos 进行服务注册与发现；后端模块已引入 Nacos Config 客户端，保留后续集中配置扩展能力，但网关路由和应用运行参数仍以仓库中的配置文件及 Kubernetes 环境变量为准。
+Nacos 以 standalone 方式由 Docker Compose 部署。当前版本主要使用 Nacos 进行服务注册与发现；后端模块已引入 Nacos Config 客户端，保留后续集中配置扩展能力，但网关路由和应用运行参数仍以仓库中的配置文件及 Kubernetes 环境变量为准。
 
-- 微服务通过 `NACOS_SERVER_ADDR=nacos.infra.svc.cluster.local:8848` 接入注册中心，Gateway 使用 `lb://service-name` 路由到注册实例。
-- 跨命名空间的 MySQL、Redis、RocketMQ、Seata 地址统一使用 Kubernetes Service DNS，例如 `mysql.infra.svc.cluster.local:3306`。
+- 微服务通过 `NACOS_SERVER_ADDR=host.k3d.internal:8148` 接入注册中心，Gateway 使用 `lb://service-name` 路由到注册实例。
+- MySQL、Redis、RocketMQ、Seata 地址通过 K3d 访问宿主机的名称 `host.k3d.internal` 和 Compose 暴露端口配置，例如 `MYSQL_HOST=host.k3d.internal`、`MYSQL_PORT=3106`。
+- 若当前 Docker / K3d 环境无法解析 `host.k3d.internal`，可将 K3s ConfigMap 中的地址替换为宿主机局域网 IP。
 - 订单超时、取餐号重置等业务动态配置由各业务服务的 `config` 表维护，并通过 Redis 缓存加速，不依赖未部署的 Sentinel 规则中心。
 
 ### 5.3 分布式事务与消息队列
@@ -279,43 +281,41 @@ Nacos 以 standalone 方式部署于 `infra` 命名空间。当前版本主要�
 ### 6.2 数据库分布与删除策略
 
 - **逻辑边界**：`user-service`、`menu-service`、`order-service`、`pickup-service` 分别访问 `canteen_user`、`canteen_menu`、`canteen_order`、`canteen_pickup` Schema，服务间通过 OpenFeign 交互，禁止跨库查询。
-- **部署方式**：课程演示环境使用一个 MySQL StatefulSet 承载上述业务 Schema；该取舍降低本地资源占用，不改变服务的数据归属边界。
+- **部署方式**：课程演示环境使用 Docker Compose 中的一个 MySQL 容器承载上述业务 Schema；该取舍降低本地资源占用，不改变服务的数据归属边界。
 - **数据生命周期**：用户、商家、菜品等主体数据通过状态字段管理可用性，订单保留状态流转记录；取餐队列项和菜单明细等过程数据可随业务流转进行删除或重建。
 
 ## 七、部署架构
 
-### 7.1 服务端口与 K3s 实例规划
+### 7.1 服务端口与部署实例规划
 
-| **组件名称**   | **K8s 控制控制器类型** | **服务暴露端口** | **默认副本数** | **挂载卷与持久化 (PVC)说明**         |
-| -------------- | ---------------------- | ---------------- | -------------- | ------------------------------------ |
-| Frontend-Nginx | Deployment             | 80 (ClusterIP)   | 1              | 无状态，不挂载                       |
-| Gateway        | Deployment             | 9000 (ClusterIP) | 1              | 无状态，不挂载                       |
-| User Service   | Deployment             | 9001 (ClusterIP) | 1              | 无状态，不挂载                       |
-| Menu Service   | Deployment             | 9002 (ClusterIP) | 1              | 无状态，不挂载                       |
-| Order Service  | Deployment             | 9003 (ClusterIP) | 1              | 无状态，不挂载                       |
-| Pickup Service | Deployment             | 9004 (ClusterIP) | 1              | 无状态，不挂载                       |
-| Nacos          | StatefulSet            | 8848 (ClusterIP) | 1              | 数据目录挂载 Local-Path PVC          |
-| MySQL          | StatefulSet            | 3306 (ClusterIP) | 1              | `/var/lib/mysql` 绑定 Local-Path PVC |
-| Redis          | StatefulSet            | 6379 (ClusterIP) | 1              | 数据持久化文件 AOF 绑定 PVC          |
-| RocketMQ NameServer | StatefulSet        | 9876 (ClusterIP) | 1              | 单实例服务发现节点                   |
-| RocketMQ Broker | StatefulSet            | 10911 (ClusterIP) | 1             | 消息存储目录绑定 PVC                 |
-| Seata Server   | StatefulSet            | 8091 (ClusterIP) | 1              | 基础日志与状态挂载 PVC               |
+| **组件名称**   | **部署方式** | **服务暴露端口** | **默认副本数** | **持久化说明** |
+| -------------- | ------------ | ---------------- | -------------- | -------------- |
+| Frontend-Nginx | K3s Deployment | 80 (ClusterIP) | 1 | 无状态，不挂载 |
+| Gateway        | K3s Deployment | 9000 (ClusterIP) | 1 | 无状态，不挂载 |
+| User Service   | K3s Deployment | 9001 (ClusterIP) | 1 | 无状态，不挂载 |
+| Menu Service   | K3s Deployment | 9002 (ClusterIP) | 1 | 无状态，不挂载 |
+| Order Service  | K3s Deployment | 9003 (ClusterIP) | 1 | 无状态，不挂载 |
+| Pickup Service | K3s Deployment | 9004 (ClusterIP) | 1 | 无状态，不挂载 |
+| Nacos          | Docker Compose | 8148 -> 8848 | 1 | 容器本地数据 |
+| MySQL          | Docker Compose | 3106 -> 3306 | 1 | Docker volume `mysql-data` |
+| Redis          | Docker Compose | 6179 -> 6379 | 1 | Docker volume `redis-data` |
+| RocketMQ NameServer | Docker Compose | 9176 -> 9876 | 1 | 无状态服务发现节点 |
+| RocketMQ Broker | Docker Compose | 11911 -> 10911 | 1 | 容器本地消息存储 |
+| Seata Server   | Docker Compose | 8191 -> 8091 | 1 | file 模式本地状态 |
 
-### 7.2 集群启动顺序与健康检查强依赖
+### 7.2 启动顺序与健康检查强依赖
 
-由于各基础组件间存在深度的启动依赖，在 K3s 部署编排时必须设置严格的启动等待链：
+由于业务服务依赖基础组件，在部署时应先启动 Docker Compose 基础件，再部署 K3s 应用：
 
 ```
-MySQL (业务表、演示数据及 undo_log 初始化完成)
-  → Redis → Nacos (standalone 就绪)
-    → RocketMQ → Seata Server
-      → User Service → Menu Service → Pickup Service
-        → Order Service
-          → Gateway
-            → 单个多入口 frontend-nginx 镜像 → Ingress 开启暴露
+Docker Compose 基础组件
+  → User Service → Menu Service → Pickup Service
+    → Order Service
+      → Gateway
+        → 单个多入口 frontend-nginx 镜像 → Ingress 开启暴露
 ```
 
-*注意：部署脚本在提交业务服务前等待 MySQL、Redis、Nacos、RocketMQ 和 Seata Pod 就绪；每个业务服务的 `ReadinessProbe` 访问自身 `/actuator/health`，用于确保该实例已完成依赖连接与启动后再接入流量。*
+*注意：`deploy/scripts/apply-all.ps1` 只部署 K3s 应用资源，不再创建基础件 StatefulSet / PVC。基础组件状态通过 `docker compose -f deploy/docker-compose/compose.yaml ps` 检查；每个业务服务的 `ReadinessProbe` 访问自身 `/actuator/health`，用于确保该实例已完成依赖连接与启动后再接入流量。*
 
 ## 八、附录
 

@@ -9,7 +9,12 @@ services:
       - "3106:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ../sql/canteen_user.sql:/docker-entrypoint-initdb.d/01-canteen-user.sql:ro
+      - ../sql/canteen_menu.sql:/docker-entrypoint-initdb.d/02-canteen-menu.sql:ro
+      - ../sql/canteen_order.sql:/docker-entrypoint-initdb.d/03-canteen-order.sql:ro
+      - ../sql/canteen_pickup.sql:/docker-entrypoint-initdb.d/04-canteen-pickup.sql:ro
+      - ../sql/seata_undo_log.sql:/docker-entrypoint-initdb.d/05-seata-undo-log.sql:ro
+      - ../sql/init_data.sql:/docker-entrypoint-initdb.d/06-init-data.sql:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
