@@ -33,9 +33,11 @@ spec:
           image: apache/rocketmq:5.2.0
           imagePullPolicy: IfNotPresent
           command:
-            - sh
+            - /bin/sh
             - -c
-            - mqnamesrv
+            - |
+              cd /home/rocketmq/rocketmq-*/bin
+              sh mqnamesrv
           ports:
             - name: namesrv
               containerPort: 9876
@@ -98,9 +100,11 @@ spec:
           image: apache/rocketmq:5.2.0
           imagePullPolicy: IfNotPresent
           command:
-            - sh
+            - /bin/sh
             - -c
-            - mqbroker -c /home/rocketmq/conf/broker.conf
+            - |
+              cd /home/rocketmq/rocketmq-*/bin
+              sh mqbroker -n rocketmq-namesrv.infra.svc.cluster.local:9876 -c /home/rocketmq/conf/broker.conf
           ports:
             - name: broker
               containerPort: 10911

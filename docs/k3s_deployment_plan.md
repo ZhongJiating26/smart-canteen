@@ -205,12 +205,16 @@ docker version
 docker ps
 ```
 
+![image-20260528013322188](E:\Projects\smart-canteen\docs\assets\image-20260528013322188.png)
+
 ### 6.2 安装 kubectl
 
 ```powershell
 winget install -e --id Kubernetes.kubectl
 kubectl version --client
 ```
+
+![image-20260528013418649](E:\Projects\smart-canteen\docs\assets\image-20260528013418649.png)
 
 ### 6.3 安装 k3d
 
@@ -224,6 +228,8 @@ k3d version
 ```powershell
 choco install k3d
 ```
+
+![image-20260528013456108](E:\Projects\smart-canteen\docs\assets\image-20260528013456108.png)
 
 ### 6.4 安装 Maven、JDK 和 Node.js
 
@@ -241,6 +247,12 @@ mvn -version
 node -v
 npm -v
 ```
+
+![image-20260528014354147](E:\Projects\smart-canteen\docs\assets\image-20260528014354147.png)
+
+![image-20260528015150173](E:\Projects\smart-canteen\docs\assets\image-20260528015150173.png)
+
+![image-20260528015222904](E:\Projects\smart-canteen\docs\assets\image-20260528015222904.png)
 
 ## 7. 停止开发阶段 Docker Compose 环境
 
@@ -307,13 +319,35 @@ options:
 k3d cluster create --config deploy/k3s/cluster.yaml
 ```
 
+![image-20260528105353667](E:\Projects\smart-canteen\docs\assets\image-20260528105353667.png)
+
+（网络创建、镜像拉取、节点启动、集群初始化全部完成）
+
 验证：
 
 ```powershell
-kubectl cluster-info
-kubectl get nodes
-kubectl get pods -A
+kubectl cluster-info # 查看集群信息
+kubectl get nodes # 查看所有节点状态
+kubectl get pods -A # 查看所有运行中的 Pod
 ```
+
+![image-20260528105418425](E:\Projects\smart-canteen\docs\assets\image-20260528105418425.png)
+
+![image-20260528105456790](E:\Projects\smart-canteen\docs\assets\image-20260528105456790.png)
+
+> 截图解释
+>
+> **控制平面正常**
+>
+> `kubectl cluster-info` 显示 Kubernetes 控制平面、CoreDNS、Metrics Server 都已就绪，API Server 运行在 `https://0.0.0.0:61019`。
+>
+> **节点状态健康**
+>
+> 两个节点 `k3d-smart-canteen-server-0`（控制平面）和 `k3d-smart-canteen-agent-0`（工作节点）的状态都是 `Ready`，版本为 `v1.31.5+k3s1`，说明节点已成功加入集群。
+>
+> **系统 Pod 启动**
+>
+> 所有核心组件都已正常运行：
 
 正常情况下，应能看到 `coredns`、`local-path-provisioner`、`metrics-server`、`traefik` 等系统组件处于 Running 状态。
 
@@ -355,6 +389,8 @@ kubectl apply -f deploy/k8s/00-namespace.yaml
 kubectl get ns
 ```
 
+![image-20260528110055420](E:\Projects\smart-canteen\docs\assets\image-20260528110055420.png)
+
 ## 10. Secret 配置
 
 基础设施和业务服务位于不同命名空间，因此 Secret 需要分别创建在 `infra` 和 `canteen` 命名空间中。Kubernetes Secret 不能跨命名空间直接引用。
@@ -382,7 +418,7 @@ stringData:
   MYSQL_USERNAME: root
   MYSQL_PASSWORD: root123456
   REDIS_PASSWORD: root123456
-  JWT_SECRET: replace-with-a-shared-jwt-secret-at-least-32-bytes-long
+  JWT_SECRET: er85>:UPGNUwm3sDhTTUm{0Oo+9MOE.=
 ```
 
 执行：
@@ -392,6 +428,8 @@ kubectl apply -f deploy/k8s/01-secret.yaml
 kubectl get secret -n infra
 kubectl get secret -n canteen
 ```
+
+![image-20260528110439852](E:\Projects\smart-canteen\docs\assets\image-20260528110439852.png)
 
 ## 11. ConfigMap 配置
 
@@ -420,6 +458,8 @@ kubectl apply -f deploy/k8s/02-configmap.yaml
 kubectl get configmap -n canteen
 ```
 
+![image-20260528110659460](E:\Projects\smart-canteen\docs\assets\image-20260528110659460.png)
+
 业务数据库表、Seata AT 模式所需的 `undo_log` 表以及演示数据已经保存在仓库的 `deploy/sql` 目录中。MySQL 初始化不能只创建数据库，必须挂载这些实际 SQL 文件，并按以下顺序创建初始化 ConfigMap：
 
 ```powershell
@@ -429,8 +469,7 @@ kubectl create configmap mysql-init-sql -n infra `
   --from-file=03-canteen-order.sql=deploy/sql/canteen_order.sql `
   --from-file=04-canteen-pickup.sql=deploy/sql/canteen_pickup.sql `
   --from-file=05-seata-undo-log.sql=deploy/sql/seata_undo_log.sql `
-  --from-file=06-init-data.sql=deploy/sql/init_data.sql `
-  --dry-run=client -o yaml | kubectl apply -f -
+  --from-file=06-init-data.sql=deploy/sql/init_data.sql
 
 kubectl get configmap mysql-init-sql -n infra
 ```
@@ -440,6 +479,8 @@ kubectl get configmap mysql-init-sql -n infra
 - 当前 Nacos 使用 standalone 内嵌存储，不依赖 `nacos_config` 数据库。
 - 当前 Seata Server 使用 file 存储，不依赖 `seata` 数据库；业务库中的 `undo_log` 表仍是订单与库存 AT 事务必须具备的表。
 - MySQL 官方镜像只会在数据目录首次初始化时执行 SQL。若此前已经创建过 MySQL PVC，需要删除测试 PVC 后重新初始化。
+
+![image-20260528130229538](E:\Projects\smart-canteen\docs\assets\image-20260528130229538.png)
 
 ## 12. MySQL 部署清单
 
@@ -550,6 +591,12 @@ kubectl logs -n infra mysql-0
 kubectl exec -it -n infra mysql-0 -- mysql -uroot -proot123456 -e "SHOW DATABASES;"
 ```
 
+![image-20260528130257096](E:\Projects\smart-canteen\docs\assets\image-20260528130257096.png)
+
+![image-20260528130326660](E:\Projects\smart-canteen\docs\assets\image-20260528130326660.png)
+
+![image-20260528130347054](E:\Projects\smart-canteen\docs\assets\image-20260528130347054.png)
+
 ## 13. Redis 部署清单
 
 Redis 使用 StatefulSet + PVC 部署，开启 AOF 持久化和密码认证。
@@ -653,6 +700,8 @@ kubectl exec -it -n infra redis-0 -- redis-cli -a root123456 ping
 ```text
 PONG
 ```
+
+![image-20260528132745493](E:\Projects\smart-canteen\docs\assets\image-20260528132745493.png)
 
 ## 14. Nacos 部署清单
 
@@ -789,6 +838,18 @@ kubectl port-forward -n infra svc/nacos 8848:8848
 http://localhost:8848/nacos
 ```
 
+![image-20260528133118349](E:\Projects\smart-canteen\docs\assets\image-20260528133118349.png)
+
+![image-20260528133138463](E:\Projects\smart-canteen\docs\assets\image-20260528133138463.png)
+
+![image-20260528133154135](E:\Projects\smart-canteen\docs\assets\image-20260528133154135.png)
+
+![image-20260528133204247](E:\Projects\smart-canteen\docs\assets\image-20260528133204247.png)
+
+![image-20260528143722799](E:\Projects\smart-canteen\docs\assets\image-20260528143722799.png)
+
+![image-20260528143737809](E:\Projects\smart-canteen\docs\assets\image-20260528143737809.png)
+
 ## 15. RocketMQ 部署清单
 
 RocketMQ 采用单 NameServer + 单 Broker 模式，满足课程作业中订单超时取消和延迟消息演示需求。
@@ -831,9 +892,11 @@ spec:
           image: apache/rocketmq:5.2.0
           imagePullPolicy: IfNotPresent
           command:
-            - sh
+            - /bin/sh
             - -c
-            - mqnamesrv
+            - |
+              cd /home/rocketmq/rocketmq-*/bin
+              sh mqnamesrv
           ports:
             - name: namesrv
               containerPort: 9876
@@ -896,9 +959,11 @@ spec:
           image: apache/rocketmq:5.2.0
           imagePullPolicy: IfNotPresent
           command:
-            - sh
+            - /bin/sh
             - -c
-            - mqbroker -c /home/rocketmq/conf/broker.conf
+            - |
+              cd /home/rocketmq/rocketmq-*/bin
+              sh mqbroker -n rocketmq-namesrv.infra.svc.cluster.local:9876 -c /home/rocketmq/conf/broker.conf
           ports:
             - name: broker
               containerPort: 10911
@@ -932,6 +997,12 @@ kubectl get pod -n infra
 kubectl logs -n infra rocketmq-namesrv-0
 kubectl logs -n infra rocketmq-broker-0
 ```
+
+![image-20260528145422172](E:\Projects\smart-canteen\docs\assets\image-20260528145422172.png)
+
+![image-20260528145502387](E:\Projects\smart-canteen\docs\assets\image-20260528145502387.png)
+
+![image-20260528150019847](E:\Projects\smart-canteen\docs\assets\image-20260528150019847.png)
 
 ## 16. Seata 部署清单
 
@@ -1051,6 +1122,12 @@ kubectl get pod -n infra
 kubectl logs -n infra seata-0
 ```
 
+![image-20260528150440252](E:\Projects\smart-canteen\docs\assets\image-20260528150440252.png)
+
+![image-20260528150452456](E:\Projects\smart-canteen\docs\assets\image-20260528150452456.png)
+
+![image-20260528150518506](E:\Projects\smart-canteen\docs\assets\image-20260528150518506.png)
+
 ## 17. 后端运行配置
 
 当前代码中的 `application.yml` 和 `bootstrap.yml` 已通过环境变量读取基础组件地址，无需为 K3s 另外新增一套 `application-k8s.yml`。业务 Deployment 统一引用第 11 节的 `canteen-common-config` 和 `canteen-app-secret` 即可。
@@ -1168,6 +1245,12 @@ cd deploy/scripts
 .\push-images.ps1
 ```
 
+![image-20260528160111573](E:\Projects\smart-canteen\docs\assets\image-20260528160111573.png)
+
+![image-20260528160130125](E:\Projects\smart-canteen\docs\assets\image-20260528160130125.png)
+
+![image-20260528160220172](E:\Projects\smart-canteen\docs\assets\image-20260528160220172.png)
+
 ## 20. 业务服务 Kubernetes 清单
 
 业务服务采用 Deployment 部署，Service 使用 ClusterIP 暴露到集群内部。所有 Deployment 的 `selector.matchLabels` 必须与 Pod 模板中的 `metadata.labels` 保持一致。
@@ -1208,7 +1291,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: k3d-smart-canteen-registry:5000/user-service:1.0.0
+          image: smart-canteen-registry:5000/user-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1268,7 +1351,7 @@ spec:
     spec:
       containers:
         - name: menu-service
-          image: k3d-smart-canteen-registry:5000/menu-service:1.0.0
+          image: smart-canteen-registry:5000/menu-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1320,7 +1403,7 @@ spec:
     spec:
       containers:
         - name: pickup-service
-          image: k3d-smart-canteen-registry:5000/pickup-service:1.0.0
+          image: smart-canteen-registry:5000/pickup-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1372,7 +1455,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: k3d-smart-canteen-registry:5000/order-service:1.0.0
+          image: smart-canteen-registry:5000/order-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1424,7 +1507,7 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: k3d-smart-canteen-registry:5000/gateway-service:1.0.0
+          image: smart-canteen-registry:5000/gateway-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -1513,6 +1596,12 @@ docker build -t localhost:5000/frontend-nginx:1.0.0 frontend/canteen-vue
 docker push localhost:5000/frontend-nginx:1.0.0
 ```
 
+![image-20260528161407936](E:\Projects\smart-canteen\docs\assets\image-20260528161407936.png)
+
+![image-20260528161418815](E:\Projects\smart-canteen\docs\assets\image-20260528161418815.png)
+
+![image-20260528161439868](E:\Projects\smart-canteen\docs\assets\image-20260528161439868.png)
+
 ### 21.5 前端 Kubernetes 清单
 
 新建文件：`deploy/k8s/apps/frontend.yaml`。
@@ -1549,7 +1638,7 @@ spec:
     spec:
       containers:
         - name: frontend-nginx
-          image: k3d-smart-canteen-registry:5000/frontend-nginx:1.0.0
+          image: smart-canteen-registry:5000/frontend-nginx:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
