@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: smart-canteen-registry:5000/gateway-service:1.0.0
+          image: smart-canteen-registry.localhost:5000/gateway-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

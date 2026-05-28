@@ -4,7 +4,7 @@ ARG SERVICE_NAME
 WORKDIR /workspace
 
 COPY . .
-RUN mvn -q -pl ${SERVICE_NAME} -am -DskipTests package
+RUN mvn -s /workspace/maven-settings.xml -q -pl ${SERVICE_NAME} -am -DskipTests package
 
 FROM eclipse-temurin:17-jre
 
@@ -14,5 +14,5 @@ WORKDIR /app
 
 COPY --from=build /workspace/${SERVICE_NAME}/target/${SERVICE_NAME}-1.0-SNAPSHOT.jar /app/service.jar
 
-EXPOSE 9002 9003
+EXPOSE 9000 9001 9002 9003 9004
 ENTRYPOINT ["java", "-jar", "/app/service.jar"]

@@ -5,6 +5,8 @@
 -- 13800000001 / 123456
 -- 13800000002 / 123456
 -- 13800000003 / 123456
+SET NAMES utf8mb4;
+
 SET @demo_password_hash = '$2a$10$76A4G48cbNH2lFWj7rjlZOl6AFtVeLLS9gDki7m7sohyncHJLAcmq';
 
 USE `canteen_user`;

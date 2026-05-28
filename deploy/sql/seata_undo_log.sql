@@ -1,6 +1,8 @@
 -- Seata undo_log DDL for transactional service databases.
 -- MySQL 8.x / Seata AT mode
 
+SET NAMES utf8mb4;
+
 USE `canteen_order`;
 
 CREATE TABLE IF NOT EXISTS `undo_log` (

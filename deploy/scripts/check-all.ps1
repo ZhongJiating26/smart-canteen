@@ -1,7 +1,10 @@
 $ErrorActionPreference = "Stop"
 
+$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$ComposeFile = Join-Path $ProjectRoot "deploy\docker-compose\compose.yaml"
+
 Write-Host "Checking Docker Compose infrastructure..."
-docker compose -f ../docker-compose/compose.yaml ps
+docker compose -p canteen -f $ComposeFile ps
 
 Write-Host "Checking application deployments..."
 kubectl rollout status deployment/user-service -n canteen --timeout=180s

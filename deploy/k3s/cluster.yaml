@@ -2,20 +2,24 @@ apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: smart-canteen
+
 servers: 1
 agents: 1
+
 ports:
-  - port: 80:80
+  - port: 8180:80
     nodeFilters:
       - loadbalancer
   - port: 443:443
     nodeFilters:
       - loadbalancer
+
 registries:
   create:
-    name: smart-canteen-registry
+    name: smart-canteen-registry.localhost
     host: 0.0.0.0
     hostPort: "5000"
+
 options:
   k3d:
     wait: true

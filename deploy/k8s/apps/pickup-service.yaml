@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: pickup-service
-          image: smart-canteen-registry:5000/pickup-service:1.0.0
+          image: smart-canteen-registry.localhost:5000/pickup-service:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
